@@ -148,10 +148,43 @@ function drawCircle(){
     const canvas_height = canvas.clientHeight;
 
 
-    const startX = canvas_width/2;
-    const startY = canvas_height/2;
-    context.arc(startX,startY,100, 0, Math.PI*2, false)
+    const canvasCenterX = canvas_width/2;
+    const canvasCenterY = canvas_height/2;
+    context.arc(canvasCenterX,canvasCenterY,100, 0, Math.PI*2, false)
     context.fill()
+
+}
+
+function drawStar(spikes=5, outerRadius=100, innerRadius=50){
+
+    const canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+    const context = canvas.getContext('2d');
+    const canvas_width = canvas.clientWidth;
+    const canvas_height = canvas.clientHeight;
+
+    let step = Math.PI / spikes
+    let rotation = Math.PI /2*3
+    let centreX = canvas_width/2;
+    let centreY = canvas_height/2;
+
+    context.beginPath();
+    context.moveTo(centreX, centreY - outerRadius);
+    for (i=0; i<spikes; i++){
+        x = centreX + Math.cos(rotation)*outerRadius
+        y = centreY + Math.sin(rotation)*outerRadius
+        context.lineTo(x,y)
+        rotation += step;
+
+        x = centreX + Math.cos(rotation)*innerRadius
+        y = centreY + Math.sin(rotation)*innerRadius
+        context.lineTo(x,y)
+        rotation += step;
+    }
+
+    context.lineTo(centreX,centreY - outerRadius);
+    context.closePath()
+    context.fill()
+
 
 }
 
@@ -161,7 +194,7 @@ let trial= {
     stimulus: `<div>
     <canvas id="jspsych-canvas-keyboard-response-stimulus" width="500" height="500" style="border:2px solid black"></canvas>
     </div>`,
-    on_load: drawTriangle,
+    on_load: drawStar,
     trial_duration: null
 
 }
