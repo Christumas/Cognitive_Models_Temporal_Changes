@@ -1,0 +1,9 @@
+/* For screen sizes which are 500px and smaller  */
+@media screen and (max-width:500px) {
+    #jspsych-canvas-keyboard-response-stimulus{
+        width:80%;
+        height:100%;
+        margin:1rem;
+
+    }
+}

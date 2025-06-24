@@ -37,17 +37,20 @@ function getBoundingBox(canvasWidth, canvasHeight, Paths){
 }
 
 
-function drawRect(c){
-    const context = c.getContext('2d');
+function drawRect(){
     const canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+    const context = canvas.getContext('2d')
     const canvas_width = canvas.clientWidth;
     const canvas_height = canvas.clientHeight;
 
-    const startX = canvas_width/2;
-    const startY = canvas_height/2;
+    const rectangleWidth = 200;
+    const rectangleHeight = 200;
+
+    const Xpos = (canvas_width/2) - (rectangleWidth/2) ;
+    const Ypos = (canvas_height/2) - (rectangleHeight/2);
 
     context.fillStyle = "red";
-    context.fillRect(startX,startY, 100, 100);
+    context.fillRect(Xpos,Ypos, rectangleWidth, rectangleHeight);
     
 
 }
@@ -183,18 +186,44 @@ function drawStar(spikes=5, outerRadius=100, innerRadius=50){
 
     context.lineTo(centreX,centreY - outerRadius);
     context.closePath()
-    context.fill()
+    context.stroke()
 
+    context.save()
+    context.clip()
 
 }
+function drawHexagon(){
+    const canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+    const context = canvas.getContext('2d');
+    
+
+    const size = 100; //basically radius because the hexagon will be drawn using a circle as reference
+    const sides = 6; //how many sides the polygon should have
+
+    const shapeCentreX = canvas.clientWidth / 2;
+    const shapeCentreY = canvas.clientHeight / 2;
+
+    context.moveTo(shapeCentreX + size * Math.cos(0), shapeCentreY + size * Math.sin(0))
+
+    for (let i=1; i<=sides; i++){
+        context.lineTo(
+            shapeCentreX + size * Math.cos(i * 2 * Math.PI / sides),
+            shapeCentreY + size * Math.sin(i * 2* Math.PI /sides)
+        );
+    }
+
+    context.stroke()
+}
+
+
 
 
 let trial= {
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: `<div>
-    <canvas id="jspsych-canvas-keyboard-response-stimulus" width="500" height="500" style="border:2px solid black"></canvas>
+    stimulus: `<div class="canvas-holder">
+    <canvas id="jspsych-canvas-keyboard-response-stimulus" width=500 height=500 style="border:2px solid black;"></canvas>
     </div>`,
-    on_load: drawStar,
+    on_load: drawHexagon,
     trial_duration: null
 
 }
