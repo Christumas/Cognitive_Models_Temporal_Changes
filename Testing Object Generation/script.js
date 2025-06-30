@@ -462,13 +462,13 @@ function generateTrials(functionArray, colourdict, textureArray){
                 type: jsPsychHtmlKeyboardResponse,
                 stimulus: `
                 <div class="canvas-holder">
-                <canvas id="jspsych-canvas-keyboard-response-stimulus" width=500 height=500 style="border:2px solid black;"></canvas>
+                <canvas id="jspsych-canvas-keyboard-response-stimulus" width=500 height=500 "></canvas>
                 </div>
                 `,
                 on_load: function(){
                     drawShapes[a](colour,texture)
                 },
-                trial_duration: null
+                trial_duration: 3000
             }
 
             trials.push(trial)
