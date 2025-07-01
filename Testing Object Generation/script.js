@@ -40,8 +40,17 @@ function getBoundingBox(canvasWidth, canvasHeight, Paths){
 }
 
 
-function drawRect(colour=null, texture=null){
-    const canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+function drawRect(colour=null, texture=null, c=null){
+
+    let canvas
+    if (c){
+        canvas = document.querySelector(`#${c}`)
+    }
+
+    else{
+        canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+    }
+
     const context = canvas.getContext('2d')
     const canvas_width = canvas.clientWidth;
     const canvas_height = canvas.clientHeight;
@@ -64,6 +73,7 @@ function drawRect(colour=null, texture=null){
             context.fillStyle = pattern;
             context.fill()
 
+            
             context.fillStyle = colour;
             context.fill()
             context.restore()
@@ -83,7 +93,17 @@ function drawRect(colour=null, texture=null){
 }
 
 
-function drawPlus(colour=null, texture=null){    
+function drawPlus(colour=null, texture=null, c=null){    
+
+    let canvas
+    if (c){
+        canvas = document.querySelector(`#${c}`)
+    }
+
+    else{
+        canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+    }
+
     paths = [
         [0,0],
         [0, 25],
@@ -100,7 +120,6 @@ function drawPlus(colour=null, texture=null){
         [0,0]
     ]
     
-    const canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
     const context = canvas.getContext('2d')
 
     const canvas_width = canvas.clientWidth;
@@ -148,7 +167,17 @@ function drawPlus(colour=null, texture=null){
 
 }
 
-function drawTriangle(colour=null, texture=null){
+
+
+function drawTriangle(colour=null, texture=null,c=null){
+    let canvas
+    if (c){
+        canvas = document.querySelector(`#${c}`)
+    }
+
+    else{
+        canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+    }
     
     const paths = [
         [0,0],
@@ -156,7 +185,6 @@ function drawTriangle(colour=null, texture=null){
         [120,0]
     ]
 
-    const canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
     const context = canvas.getContext('2d');
     const canvas_width = canvas.clientWidth;
     const canvas_height = canvas.clientHeight;
@@ -203,8 +231,17 @@ function drawTriangle(colour=null, texture=null){
     }
 }
 
-function drawPacman(colour=null, texture=null){
-    const canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+
+function drawPacman(colour=null, texture=null, c=null){
+
+    let canvas
+    if (c){
+        canvas = document.querySelector(`#${c}`)
+    }
+
+    else{
+        canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+    }
     const context = canvas.getContext('2d');
     const canvas_width = canvas.clientWidth;
     const canvas_height = canvas.clientHeight;
@@ -212,6 +249,7 @@ function drawPacman(colour=null, texture=null){
 
     const startX = canvas_width/2;  
     const startY = canvas_height/2;
+    context.beginPath()
     context.arc(startX,startY,100, 0, Math.PI*1.5, false)
     context.lineTo(startX,startY)
     context.closePath()
@@ -247,14 +285,14 @@ function drawPacman(colour=null, texture=null){
 
 function drawCircle(colour=null, texture=null, c=null){
    
-     if (c){
-        const canvas = document.querySelector(c)
+    let canvas
+    if (c){
+        canvas = document.querySelector(`#${c}`)
     }
 
     else{
-        const canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+        canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
     }
-
     const context = canvas.getContext('2d');
     const canvas_width = canvas.clientWidth;
     const canvas_height = canvas.clientHeight;
@@ -293,12 +331,20 @@ function drawCircle(colour=null, texture=null, c=null){
 
 }
 
-function drawStar(colour=null, texture=null){
+function drawStar(colour=null, texture=null, c=null){
+
+    let canvas
+    if (c){
+        canvas = document.querySelector(`#${c}`)
+    }
+
+    else{
+        canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
+    }
 
     const spikes = 5 
     const outerRadius = 100 
     const innerRadius = 50
-    const canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus")
     const context = canvas.getContext('2d');
     const canvas_width = canvas.clientWidth;
     const canvas_height = canvas.clientHeight;
@@ -434,16 +480,16 @@ const colourVals = {
 
 
 const textures = [
-    "Textures\\texture_bottle.png",
-    "Textures\\texture_bricks.png",
-    "Textures\\texture_dots.png",
-    "Textures\\texture_flannel.png",
-    "Textures\\texture_grid.png",
-    "Textures\\texture_verticalLines.png",
-    "Textures\\texture_waves.png"
+    "Textures/texture_bottle.png",
+    "Textures/texture_bricks.png",
+    "Textures/texture_dots.png",
+    "Textures/texture_flannel.png",
+    "Textures/texture_grid.png",
+    "Textures/texture_verticalLines.png",
+    "Textures/texture_waves.png"
 ]
 
-
+//function to get the design file
 async function getFile(file) {
     try{
         const response = await fetch(file);
@@ -456,7 +502,7 @@ async function getFile(file) {
             skipEmptyLines:true
         })
 
-        return parsedData;
+        return parsedData.data;
 
     }
 
@@ -466,6 +512,7 @@ async function getFile(file) {
     }  
 }
 
+//function to generate trials specified by designfile
 async function generateTrials(functionArray, colourdict, textureArray,designFile){
     const colours = Object.keys(colourdict)
     const trials = []
@@ -476,6 +523,7 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
             const colourNode = row["Colour_stim"];
             const textureNode = row["Texture_stim"];
             const shapeNode = row["Shape_stim"];
+            console.log(colourNode, textureNode,shapeNode)
 
             const trial = {
                 type: jsPsychHtmlKeyboardResponse,
@@ -483,8 +531,9 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                             <canvas id="jspsych-canvas-keyboard-response-stimulus" width=500 height=500 style="border:2px solid black;"></canvas>
                             </div>`,
                 on_load : function(){
-                    drawShapes[shapeNode](colourNode,textureNode)
-                }
+                    drawShapes[shapeNode](colours[colourNode],textures[textureNode])
+                },
+                trial_duration: 3000
             }
             trials.push(trial)
   
@@ -495,23 +544,36 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
             const textureNodeStim = row["Texture_stim"];
             const shapeNodeStim = row["Shape_stim"];
 
-            const colorNodeChoice = row["Colour_choice"];
+            const colourNodeChoice = row["Colour_choice"];
             const textureNodeChoice = row["Texture_choice"];
             const shapeNodeChoice = row["Shape_choice"]
-            
+            console.log(colourNodeStim, textureNodeStim,shapeNodeStim, colourNodeChoice, textureNodeChoice, shapeNodeChoice )
+
             const trial = {
                 type: jsPsychHtmlKeyboardResponse,
                 stimulus:` <div class="canvas-holder" style="display:flex; gap:1rem;">
-                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="jspsych-canvas-keyboard-response-stimulus-1" width=500 height=500 style="border:2px solid black;"></canvas>
-                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="jspsych-canvas-keyboard-response-stimulus-2" width=500 height=500 style="border:2px solid black;"></canvas>
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1" width=500 height=500 style="border:2px solid black;"></canvas>
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2" width=500 height=500 style="border:2px solid black;"></canvas>
                             </div>`,
                 choices : ["arrowleft", "arrowright"],
-                prompt: `Which of these objects are likely to come next?`,
+                prompt: `<p style="margin-top:0.5rem;">Which of these objects are likely to come next?</p>`,
                 on_load: function() {
+                    const canvasIDs = ["canvas-1", "canvas-2"]
+                    for (let i = canvasIDs.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [canvasIDs[i], canvasIDs[j]] = [canvasIDs[j], canvasIDs[i]];
+                    console.log(canvasIDs[0],canvasIDs[1])
+                    }
+
+                    drawShapes[shapeNodeStim](colours[colourNodeStim],textures[textureNodeStim], canvasIDs[0])
+                    drawShapes[shapeNodeChoice](colours[colourNodeChoice],textures[textureNodeChoice], canvasIDs[1])
+
 
                 }
 
+
             }
+            trials.push(trial)
         }
     })
 
@@ -521,43 +583,53 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
 
 const csv = '../Graph_Matrices_Generation/sample_designfile.csv'
 
-const stim_trial = {
-    type: jsPsychHtmlKeyboardResponse,
-    stimulus:` <div class="canvas-holder" style="display:flex; gap:1rem;">
-                <canvas class="jspsych-canvas-keyboard-response-stimulus" id="jspsych-canvas-keyboard-response-stimulus" width=500 height=500 style="border:2px solid black;"></canvas>
-                </div>`,
-    on_load: function() {
-        drawHexagon(colourVals["Red"],textures[0])
+// const stim_trial = {
+//     type: jsPsychHtmlKeyboardResponse,
+//     stimulus:` <div class="canvas-holder" style="display:flex; gap:1rem;">
+//                 <canvas class="jspsych-canvas-keyboard-response-stimulus" id="jspsych-canvas-keyboard-response-stimulus" width=500 height=500 style="border:2px solid black;"></canvas>
+//                 </div>`,
+//     on_load: function() {
+//         drawHexagon(colourVals["Red"],textures[0])
 
-    }
+//     }
 
 
-}
+// }
 
-const choice_trial = {
-    type: jsPsychHtmlKeyboardResponse,
-    stimulus:` <div class="canvas-holder" style="display:flex; gap:1rem;">
-                    <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1" width=500 height=500 style="border:2px solid black;"></canvas>
-                    <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2" width=500 height=500 style="border:2px solid black;"></canvas>
-                </div>`,
-    choices : ["arrowleft", "arrowright"],
-    prompt: `Which of these objects are likely to come next?`,
-    on_load: function() {
-        const canvasIDs = ["canvas-1", "canvas-2"]
-        for (let i = canvasIDs.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [canvasIDs[i], canvasIDs[j]] = [canvasIDs[j], canvasIDs[i]];
-          console.log(canvasIDs[0],canvasIDs[1])
-        }
-        drawHexagon(colourVals["Red"],textures[0],canvasIDs[0])
+// const choice_trial = {
+//     type: jsPsychHtmlKeyboardResponse,
+//     stimulus:` <div class="canvas-holder" style="display:flex; gap:1rem;">
+//                     <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1" width=500 height=500 style="border:2px solid black;"></canvas>
+//                     <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2" width=500 height=500 style="border:2px solid black;"></canvas>
+//                 </div>`,
+//     choices : ["arrowleft", "arrowright"],
+//     prompt: `Which of these objects are likely to come next?`,
+//     on_load: function() {
+//         const canvasIDs = ["canvas-1", "canvas-2"]
+//         for (let i = canvasIDs.length - 1; i > 0; i--) {
+//           const j = Math.floor(Math.random() * (i + 1));
+//           [canvasIDs[i], canvasIDs[j]] = [canvasIDs[j], canvasIDs[i]];
+//           console.log(canvasIDs[0],canvasIDs[1])
+//         }
+//         drawHexagon(colourVals["Red"],textures[0],canvasIDs[0])
+//         drawPacman(colourVals["Azure"], textures[7], canvasIDs[1])
 
-    }
+//     }
 
-}
+// }
 
 
 // const trials = generateTrials(drawShapes,colourVals,textures);
 // timeline.push(...trials)
-timeline.push(choice_trial)
 
-jsPsych.run(timeline)
+
+async function runExperiment(){
+    const trials = await generateTrials(drawShapes,colourVals,textures,csv)
+
+    timeline.push(...trials)
+    jsPsych.run(timeline)
+   
+
+}
+
+runExperiment()
