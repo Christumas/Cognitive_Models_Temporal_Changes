@@ -55,8 +55,8 @@ function drawRect(colour=null, texture=null, c=null){
     const canvas_width = canvas.clientWidth;
     const canvas_height = canvas.clientHeight;
 
-    const rectangleWidth = 200;
-    const rectangleHeight = 200;
+    const rectangleWidth = 400;
+    const rectangleHeight = 400;
 
     const Xpos = (canvas_width/2) - (rectangleWidth/2) ;
     const Ypos = (canvas_height/2) - (rectangleHeight/2);
@@ -67,6 +67,7 @@ function drawRect(colour=null, texture=null, c=null){
 
     if (texture){
         const img = new Image();
+        // console.log("texture is present")
         img.src = texture;
         img.onload = () => {
             const pattern = context.createPattern(img,'repeat') 
@@ -144,6 +145,7 @@ function drawPlus(colour=null, texture=null, c=null){
 
     if (texture){
         const img = new Image();
+        // console.log("texture is present")
         img.src = texture;
         img.onload = () => {
             const pattern = context.createPattern(img,'repeat') 
@@ -167,6 +169,52 @@ function drawPlus(colour=null, texture=null, c=null){
 
 }
 
+function drawSemiCircle(colour=null,texture=null, c=null){
+    let canvas
+    if (c){
+        document.querySelector(`${c}`)
+    }
+
+    else{
+        canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus");
+    }
+
+    const context = canvas.getContext('2d');
+    const canvas_width = canvas.clientWidth;
+    const canvas_height = canvas.clientHeight;
+
+    const startX = canvas_width / 2
+    const startY = canvas_height / 2
+    const radius = canvas_width / 4
+
+
+    // arc(x, y, radius, startAngle, endAngle, counterclockwise)
+    context.beginPath(startX,startY)
+    context.arc(startX, startY,radius, Math.PI, 0, true)
+    context.lineWidth = 4;
+    context.closePath()
+    context.stroke();
+
+    if(texture){
+        const img = new Image();
+        // console.log("texture is present")
+        img.src = texture;
+        img.onload = () => {
+            const pattern = context.createPattern(img,'repeat') 
+            context.fillStyle = pattern;
+            context.fill()
+
+            context.fillStyle = colour;
+            context.fill()
+            context.restore()
+
+            context.lineWidth = 3;
+            context.stroke()
+        }
+
+    }
+
+}
 
 
 function drawTriangle(colour=null, texture=null,c=null){
@@ -181,9 +229,10 @@ function drawTriangle(colour=null, texture=null,c=null){
     
     const paths = [
         [0,0],
-        [60,-100],
-        [120,0]
+        [240,-400],
+        [480,0]
     ]
+    
 
     const context = canvas.getContext('2d');
     const canvas_width = canvas.clientWidth;
@@ -209,6 +258,7 @@ function drawTriangle(colour=null, texture=null,c=null){
 
     if (texture){
         const img = new Image();
+        // console.log("texture is present")
         img.src = texture;
         img.onload = () => {
             const pattern = context.createPattern(img,'repeat') 
@@ -250,7 +300,7 @@ function drawPacman(colour=null, texture=null, c=null){
     const startX = canvas_width/2;  
     const startY = canvas_height/2;
     context.beginPath()
-    context.arc(startX,startY,100, 0, Math.PI*1.5, false)
+    context.arc(startX,startY,200, 0, Math.PI*1.5, false)
     context.lineTo(startX,startY)
     context.closePath()
     context.fill()
@@ -259,6 +309,7 @@ function drawPacman(colour=null, texture=null, c=null){
     context.clip()
 
     if (texture){
+        // console.log("texture is present")
         const img = new Image();
         img.src = texture;
         img.onload = () => {
@@ -300,7 +351,7 @@ function drawCircle(colour=null, texture=null, c=null){
 
     const canvasCenterX = canvas_width/2;
     const canvasCenterY = canvas_height/2;
-    context.arc(canvasCenterX,canvasCenterY,100, 0, Math.PI*2, false)
+    context.arc(canvasCenterX,canvasCenterY,200, 0, Math.PI*2, false)
     context.fill()
 
     context.save()
@@ -308,6 +359,7 @@ function drawCircle(colour=null, texture=null, c=null){
 
     if (texture){
         const img = new Image();
+        // console.log("texture is present")
         img.src = texture;
         img.onload = () => {
             const pattern = context.createPattern(img,'repeat') 
@@ -343,8 +395,8 @@ function drawStar(colour=null, texture=null, c=null){
     }
 
     const spikes = 5 
-    const outerRadius = 100 
-    const innerRadius = 50
+    const outerRadius = 200 
+    const innerRadius = 100
     const context = canvas.getContext('2d');
     const canvas_width = canvas.clientWidth;
     const canvas_height = canvas.clientHeight;
@@ -374,7 +426,7 @@ function drawStar(colour=null, texture=null, c=null){
     context.clip()
     
     if (texture){
-        console.log("texture is present")
+        // console.log("texture is present")
         const img = new Image();
         img.src = texture;
         img.onload = () => {
@@ -414,7 +466,7 @@ function drawHexagon(colour, texture, c=null){
 
     const context = canvas.getContext('2d');
 
-    const size = 100; //basically radius because the hexagon will be drawn using a circle as reference
+    const size = 200; //basically radius because the hexagon will be drawn using a circle as reference
     const sides = 6; //how many sides the polygon should have
 
     const shapeCentreX = canvas.clientWidth / 2;
@@ -462,7 +514,7 @@ const drawShapes = [
     drawCircle,
     drawHexagon,
     drawPacman,
-    drawPlus,
+    drawSemiCircle,
     drawRect,
     drawStar,
     drawTriangle
@@ -515,15 +567,29 @@ async function getFile(file) {
 //function to generate trials specified by designfile
 async function generateTrials(functionArray, colourdict, textureArray,designFile){
     const colours = Object.keys(colourdict)
+    console.log(colours)
     const trials = []
 
     const table = await getFile(designFile);
     table.forEach( (row) => {
-        if (!row["Colour_choice"]){
-            const colourNode = row["Colour_stim"];
-            const textureNode = row["Texture_stim"];
+        if (!row["Colour_choice"] && !row["Shape_choice"] && !row["Texture_choice"]){
+            const colourNode = colourVals[colours[row["Colour_stim"]]];
+            const textureNode = textures[row["Texture_stim"]];
             const shapeNode = row["Shape_stim"];
-            console.log(colourNode, textureNode,shapeNode)
+
+             let trialData = {
+                'Colour_stim':row["Colour_stim"],
+                'Texture_stim':row["Texture_stim"],
+                'Shape_stim': row["Shape_stim"],
+                'Colour_choice':row["Colour_choice"],
+                'Shape_choice': row["Shape_choice"],
+                'Texture_choice' : row["Texture_choice"],
+                'Response': 0,
+                'Stim_Canvas': '',
+                'Choice_Canvas': '',
+                'Response_Correct': ''
+
+            }
 
             const trial = {
                 type: jsPsychHtmlKeyboardResponse,
@@ -531,49 +597,143 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                             <canvas id="jspsych-canvas-keyboard-response-stimulus" width=500 height=500 style="border:2px solid black;"></canvas>
                             </div>`,
                 on_load : function(){
-                    drawShapes[shapeNode](colours[colourNode],textures[textureNode])
+                    drawShapes[shapeNode](colourNode,textureNode)
                 },
-                trial_duration: 3000
+                trial_duration: 1000,
+                post_trial_gap: 900,
+                data: {'Colour_stim': row["Colour_stim"],
+                        'Shape_stim': row["Shape_stim"],
+                        'Texture_stim' : row["Texture_stim"]
+                },
+                on_finish: function (){
+                }
             }
             trials.push(trial)
-  
+
         }
 
         else{
-            const colourNodeStim = row["Colour_stim"];
-            const textureNodeStim = row["Texture_stim"];
+            const colourNodeStim = colourVals[colours[row["Colour_stim"]]];
+            const textureNodeStim = textures[row["Texture_stim"]];
             const shapeNodeStim = row["Shape_stim"];
 
-            const colourNodeChoice = row["Colour_choice"];
-            const textureNodeChoice = row["Texture_choice"];
+            const colourNodeChoice = colourVals[colours[row["Colour_choice"]]];
+            const textureNodeChoice = textures[row["Texture_choice"]];;
             const shapeNodeChoice = row["Shape_choice"]
-            console.log(colourNodeStim, textureNodeStim,shapeNodeStim, colourNodeChoice, textureNodeChoice, shapeNodeChoice )
 
-            const trial = {
+            const trialIndex = trials.length;
+            const canvasIDs = [`canvas-1-${trialIndex}`,`canvas-2-${trialIndex}`]
+
+            //manually add the relevant data as we are manually ending the trial 
+            let trialData = {
+                'Colour_stim':row["Colour_stim"],
+                'Texture_stim':row["Texture_stim"],
+                'Shape_stim': row["Shape_stim"],
+                'Colour_choice':row["Colour_choice"],
+                'Shape_choice': row["Shape_choice"],
+                'Texture_choice' : row["Texture_choice"],
+                'Response': 0,
+                'Stim_Canvas': '',
+                'Choice_Canvas': '',
+                'Response_Correct': ''
+
+            }
+            
+
+            const choice_trial = {
                 type: jsPsychHtmlKeyboardResponse,
                 stimulus:` <div class="canvas-holder" style="display:flex; gap:1rem;">
-                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1" width=500 height=500 style="border:2px solid black;"></canvas>
-                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2" width=500 height=500 style="border:2px solid black;"></canvas>
+                            <div class="holder-1">
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1-${trialIndex}" width=500 height=500 style="border:2px solid black;"></canvas>
+                            <p class="feedback"></p>
+                            </div>
+                            <div class="holder-2">
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2-${trialIndex}" width=500 height=500 style="border:2px solid black;"></canvas>
+                            <p class="feedback"></p>
                             </div>`,
-                choices : ["arrowleft", "arrowright"],
+                choices : ["ArrowLeft", "ArrowRight"],
                 prompt: `<p style="margin-top:0.5rem;">Which of these objects are likely to come next?</p>`,
+                response_ends_trial:false,
                 on_load: function() {
-                    const canvasIDs = ["canvas-1", "canvas-2"]
+
+                    //shuffle the canvas ids on every choice trial so the stimulus and generated objects
+                    //are drawn on different canvases
                     for (let i = canvasIDs.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [canvasIDs[i], canvasIDs[j]] = [canvasIDs[j], canvasIDs[i]];
                     console.log(canvasIDs[0],canvasIDs[1])
                     }
+                    
+                    //participants should choose the next shape according to the graph structure, so the 
+                    //stimulus shapes, therefore the correct answer should be the canvas at index [0] in the array
 
-                    drawShapes[shapeNodeStim](colours[colourNodeStim],textures[textureNodeStim], canvasIDs[0])
-                    drawShapes[shapeNodeChoice](colours[colourNodeChoice],textures[textureNodeChoice], canvasIDs[1])
+                    drawShapes[shapeNodeStim](colourNodeStim,textureNodeStim, canvasIDs[0])
+                    drawShapes[shapeNodeChoice](colourNodeChoice, textureNodeChoice, canvasIDs[1]) 
+
+                    console.log("Correct option:", canvasIDs[0])
+                    console.log("Incorrect option:", canvasIDs[1])
+
+                    let correctOption = canvasIDs[0];
+                    let incorrectOption = canvasIDs[1];
+
+                    trialData["Choice_Canvas"] = canvasIDs[1]; //update our trial data object
+                    trialData["Stim_Canvas"] = canvasIDs[0];
+                    
+                    if (document.querySelector(`#${correctOption}`) || document.querySelector(`#${incorrectOption}`))
+                        {
+                        // console.log("the canvases exist")
+                        document.addEventListener("keydown", (event)=> {
+
+                        const feedbackCorrect = "✅";
+                        const feedbackIncorrect = "❌";
+                    
+                        const keyPress = event.key;
+                        trialData["Response"] = keyPress;
+                        const correctCanvas = correctOption;
+                        let chosenCanvasID = null;
+
+                        if (keyPress == "ArrowLeft"){
+                            chosenCanvasID = `canvas-1-${trialIndex}`
+                            console.log("Chosen Canvas:", chosenCanvasID)
+
+                        } else if(keyPress == "ArrowRight"){
+                            chosenCanvasID = `canvas-2-${trialIndex}`
+                            console.log("Chosen Canvas:", chosenCanvasID)
+                        }
+                        
+                        if (chosenCanvasID == correctCanvas ){
+                            trialData["Chosen_Canvas"] = chosenCanvasID;
+                            trialData["Response_Correct"] = "true"
+                            const chosenCanvas = document.querySelector(`#${chosenCanvasID}`)
+                            const parent = chosenCanvas.parentElement
+                            const feedbackElement = parent.querySelector(".feedback")
+                            feedbackElement.textContent = feedbackCorrect;
+                            feedbackElement.style.fontSize = "3rem";
+                            setTimeout( () => {jsPsych.finishTrial(trialData)},1000)
+                            
+                            
+                        }
+
+                        else{
+                            trialData["Chosen_Canvas"] = chosenCanvasID;
+                            trialData["Response_Correct"] = "false"
+                            const chosenCanvas = document.querySelector(`#${chosenCanvasID}`)
+                            console.log(document.querySelectorAll("canvas"))
+                            const parent = chosenCanvas.parentElement
+                            const feedbackElement = parent.querySelector(".feedback")
+                            feedbackElement.textContent = feedbackIncorrect;
+                            feedbackElement.style.fontSize = "3rem";
+                            setTimeout( () => {jsPsych.finishTrial(trialData)},1000)
+                            
+                        }
 
 
-                }
-
-
+                    })
+                    }}, 
+                    options: {once:true},
+                    post_trial_gap: 900,
             }
-            trials.push(trial)
+            trials.push(choice_trial)
         }
     })
 
@@ -585,13 +745,15 @@ const csv = '../Graph_Matrices_Generation/sample_designfile.csv'
 
 // const stim_trial = {
 //     type: jsPsychHtmlKeyboardResponse,
-//     stimulus:` <div class="canvas-holder" style="display:flex; gap:1rem;">
+//     stimulus:` <div class="canvas-holder">
 //                 <canvas class="jspsych-canvas-keyboard-response-stimulus" id="jspsych-canvas-keyboard-response-stimulus" width=500 height=500 style="border:2px solid black;"></canvas>
 //                 </div>`,
 //     on_load: function() {
 //         drawHexagon(colourVals["Red"],textures[0])
+    
 
-//     }
+//     },
+//     trial_duration: 2000,
 
 
 // }
@@ -599,8 +761,8 @@ const csv = '../Graph_Matrices_Generation/sample_designfile.csv'
 // const choice_trial = {
 //     type: jsPsychHtmlKeyboardResponse,
 //     stimulus:` <div class="canvas-holder" style="display:flex; gap:1rem;">
-//                     <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1" width=500 height=500 style="border:2px solid black;"></canvas>
-//                     <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2" width=500 height=500 style="border:2px solid black;"></canvas>
+//                 <div class="holder-1"><canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1" width=500 height=500 style="border:2px solid black;"></canvas></div>
+//                 <div class="holder-2"><canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2" width=500 height=500 style="border:2px solid black;"></canvas></div>
 //                 </div>`,
 //     choices : ["arrowleft", "arrowright"],
 //     prompt: `Which of these objects are likely to come next?`,
@@ -614,18 +776,36 @@ const csv = '../Graph_Matrices_Generation/sample_designfile.csv'
 //         drawHexagon(colourVals["Red"],textures[0],canvasIDs[0])
 //         drawPacman(colourVals["Azure"], textures[7], canvasIDs[1])
 
+//        document.addEventListener("keydown", (event)=> {
+//                         console.log(event)
+//                         const div = document.querySelector(".holder-1")
+//                         const parent = div.parentElement
+//                         console.log(parent)
+//                         const feedbackCorrect = document.createElement("p")
+//                         feedbackCorrect.textContent = "✅"
+//                         feedbackCorrect.style.fontSize = "3rem"
+
+//                         if (event.key){
+//                             div.appendChild(feedbackCorrect)
+//                         }
+
+//                     })
+
+
+
 //     }
 
 // }
 
 
-// const trials = generateTrials(drawShapes,colourVals,textures);
-// timeline.push(...trials)
+// timeline.push([stim_trial,choice_trial])
+// jsPsych.run(timeline)
 
 
 async function runExperiment(){
     const trials = await generateTrials(drawShapes,colourVals,textures,csv)
-
+    console.log(trials);
+    console.log(trials.length)
     timeline.push(...trials)
     jsPsych.run(timeline)
    
