@@ -40,7 +40,7 @@ function getBoundingBox(canvasWidth, canvasHeight, Paths){
 }
 
 
-function drawRect(colour=null, texture=null, c=null){
+function drawRect(colour=null, texture=null, c=null, scale = 1.5){
 
     let canvas
     if (c){
@@ -55,8 +55,8 @@ function drawRect(colour=null, texture=null, c=null){
     const canvas_width = canvas.clientWidth;
     const canvas_height = canvas.clientHeight;
 
-    const rectangleWidth = 400;
-    const rectangleHeight = 400;
+    const rectangleWidth = 100 * scale;
+    const rectangleHeight = 100 * scale;
 
     const Xpos = (canvas_width/2) - (rectangleWidth/2) ;
     const Ypos = (canvas_height/2) - (rectangleHeight/2);
@@ -169,7 +169,7 @@ function drawPlus(colour=null, texture=null, c=null){
 
 }
 
-function drawSemiCircle(colour=null,texture=null, c=null){
+function drawSemiCircle(colour=null,texture=null, c=null, scale=1){
     let canvas
     if (c){
         document.querySelector(`${c}`)
@@ -185,7 +185,7 @@ function drawSemiCircle(colour=null,texture=null, c=null){
 
     const startX = canvas_width / 2
     const startY = canvas_height / 2
-    const radius = canvas_width / 4
+    const radius = 100*scale
 
 
     // arc(x, y, radius, startAngle, endAngle, counterclockwise)
@@ -217,7 +217,7 @@ function drawSemiCircle(colour=null,texture=null, c=null){
 }
 
 
-function drawTriangle(colour=null, texture=null,c=null){
+function drawTriangle(colour=null, texture=null,c=null, scale=1.5){
     let canvas
     if (c){
         canvas = document.querySelector(`#${c}`)
@@ -229,8 +229,8 @@ function drawTriangle(colour=null, texture=null,c=null){
     
     const paths = [
         [0,0],
-        [240,-400],
-        [480,0]
+        [60 *scale,-100 * scale],
+        [120 *scale,0*scale]
     ]
     
 
@@ -282,7 +282,7 @@ function drawTriangle(colour=null, texture=null,c=null){
 }
 
 
-function drawPacman(colour=null, texture=null, c=null){
+function drawPacman(colour=null, texture=null, c=null, scale=1){
 
     let canvas
     if (c){
@@ -299,8 +299,9 @@ function drawPacman(colour=null, texture=null, c=null){
 
     const startX = canvas_width/2;  
     const startY = canvas_height/2;
+    const radius = 100 * scale;
     context.beginPath()
-    context.arc(startX,startY,200, 0, Math.PI*1.5, false)
+    context.arc(startX,startY,radius, 0, Math.PI*1.5, false)
     context.lineTo(startX,startY)
     context.closePath()
     context.fill()
@@ -334,7 +335,7 @@ function drawPacman(colour=null, texture=null, c=null){
 
 }
 
-function drawCircle(colour=null, texture=null, c=null){
+function drawCircle(colour=null, texture=null, c=null, scale=1){
    
     let canvas
     if (c){
@@ -351,7 +352,8 @@ function drawCircle(colour=null, texture=null, c=null){
 
     const canvasCenterX = canvas_width/2;
     const canvasCenterY = canvas_height/2;
-    context.arc(canvasCenterX,canvasCenterY,200, 0, Math.PI*2, false)
+    const radius = 100 * scale;
+    context.arc(canvasCenterX,canvasCenterY,radius, 0, Math.PI*2, false)
     context.fill()
 
     context.save()
@@ -383,7 +385,7 @@ function drawCircle(colour=null, texture=null, c=null){
 
 }
 
-function drawStar(colour=null, texture=null, c=null){
+function drawStar(colour=null, texture=null, c=null, scale=1){
 
     let canvas
     if (c){
@@ -395,8 +397,8 @@ function drawStar(colour=null, texture=null, c=null){
     }
 
     const spikes = 5 
-    const outerRadius = 200 
-    const innerRadius = 100
+    const outerRadius = 100 * scale 
+    const innerRadius = 50 * scale
     const context = canvas.getContext('2d');
     const canvas_width = canvas.clientWidth;
     const canvas_height = canvas.clientHeight;
@@ -453,7 +455,7 @@ function drawStar(colour=null, texture=null, c=null){
 }
 
 
-function drawHexagon(colour, texture, c=null){
+function drawHexagon(colour, texture, c=null, scale = 1){
     
     let canvas
     if (c){
@@ -466,7 +468,7 @@ function drawHexagon(colour, texture, c=null){
 
     const context = canvas.getContext('2d');
 
-    const size = 200; //basically radius because the hexagon will be drawn using a circle as reference
+    const size = 100 * scale; //basically radius because the hexagon will be drawn using a circle as reference
     const sides = 6; //how many sides the polygon should have
 
     const shapeCentreX = canvas.clientWidth / 2;
@@ -743,63 +745,6 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
 
 const csv = '../Graph_Matrices_Generation/sample_designfile.csv'
 
-// const stim_trial = {
-//     type: jsPsychHtmlKeyboardResponse,
-//     stimulus:` <div class="canvas-holder">
-//                 <canvas class="jspsych-canvas-keyboard-response-stimulus" id="jspsych-canvas-keyboard-response-stimulus" width=500 height=500 style="border:2px solid black;"></canvas>
-//                 </div>`,
-//     on_load: function() {
-//         drawHexagon(colourVals["Red"],textures[0])
-    
-
-//     },
-//     trial_duration: 2000,
-
-
-// }
-
-// const choice_trial = {
-//     type: jsPsychHtmlKeyboardResponse,
-//     stimulus:` <div class="canvas-holder" style="display:flex; gap:1rem;">
-//                 <div class="holder-1"><canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1" width=500 height=500 style="border:2px solid black;"></canvas></div>
-//                 <div class="holder-2"><canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2" width=500 height=500 style="border:2px solid black;"></canvas></div>
-//                 </div>`,
-//     choices : ["arrowleft", "arrowright"],
-//     prompt: `Which of these objects are likely to come next?`,
-//     on_load: function() {
-//         const canvasIDs = ["canvas-1", "canvas-2"]
-//         for (let i = canvasIDs.length - 1; i > 0; i--) {
-//           const j = Math.floor(Math.random() * (i + 1));
-//           [canvasIDs[i], canvasIDs[j]] = [canvasIDs[j], canvasIDs[i]];
-//           console.log(canvasIDs[0],canvasIDs[1])
-//         }
-//         drawHexagon(colourVals["Red"],textures[0],canvasIDs[0])
-//         drawPacman(colourVals["Azure"], textures[7], canvasIDs[1])
-
-//        document.addEventListener("keydown", (event)=> {
-//                         console.log(event)
-//                         const div = document.querySelector(".holder-1")
-//                         const parent = div.parentElement
-//                         console.log(parent)
-//                         const feedbackCorrect = document.createElement("p")
-//                         feedbackCorrect.textContent = "✅"
-//                         feedbackCorrect.style.fontSize = "3rem"
-
-//                         if (event.key){
-//                             div.appendChild(feedbackCorrect)
-//                         }
-
-//                     })
-
-
-
-//     }
-
-// }
-
-
-// timeline.push([stim_trial,choice_trial])
-// jsPsych.run(timeline)
 
 
 async function runExperiment(){
