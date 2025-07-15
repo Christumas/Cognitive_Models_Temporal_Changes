@@ -632,7 +632,7 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                 on_load : function(){
                     drawShapes[shapeNode](colourNode,textureNode)
                 },
-                keys: [],
+                choices: [],
                 trial_duration: 1000,
                 post_trial_gap: 300,
                 data: {'Colour_stim': row["Colour_stim"],
