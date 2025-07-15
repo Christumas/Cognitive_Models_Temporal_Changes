@@ -172,12 +172,12 @@ function drawPlus(colour=null, texture=null, c=null){
 function drawSemiCircle(colour=null,texture=null, c=null, scale=1){
     let canvas
     if (c){
-        document.querySelector(`${c}`)
+        canvas = document.querySelector(`#${c}`)
     }
 
     else{
         canvas = document.querySelector("#jspsych-canvas-keyboard-response-stimulus");
-    }
+    }   
 
     const context = canvas.getContext('2d');
     const canvas_width = canvas.clientWidth;
@@ -511,6 +511,37 @@ function drawHexagon(colour, texture, c=null, scale = 1){
     
 }
 
+function drawFeedback(imageSource,correctFeedback,c){
+    let canvas
+    if (c){
+        canvas = c.getContext('2d');
+    }
+
+    let feedbackImage 
+    if (correctFeedback){
+        feedbackImage = imageSource[0];
+    }
+
+    else{
+        feedbackImage = imageSource[1];
+    }
+    
+
+    const img = new Image();
+    img.src  = feedbackImage;
+    img.onload = () => {
+        canvas.drawImage(img,0,0, 125,125)
+    }
+
+}
+
+const feedbackImgSource = ['images/positive_tick.png', 'images/negative_cross.png']
+
+
+
+
+// Experiment Logic
+
 
 const drawShapes = [
     drawCircle,
@@ -596,18 +627,17 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
             const trial = {
                 type: jsPsychHtmlKeyboardResponse,
                 stimulus: ` <div class="canvas-holder">
-                            <canvas id="jspsych-canvas-keyboard-response-stimulus" width=500 height=500 style="border:2px solid black;"></canvas>
+                            <canvas id="jspsych-canvas-keyboard-response-stimulus" width=400 height=400 style="border:2px solid black;"></canvas>
                             </div>`,
                 on_load : function(){
                     drawShapes[shapeNode](colourNode,textureNode)
                 },
+                keys: [],
                 trial_duration: 1000,
-                post_trial_gap: 900,
+                post_trial_gap: 300,
                 data: {'Colour_stim': row["Colour_stim"],
                         'Shape_stim': row["Shape_stim"],
                         'Texture_stim' : row["Texture_stim"]
-                },
-                on_finish: function (){
                 }
             }
             trials.push(trial)
@@ -646,11 +676,11 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                 type: jsPsychHtmlKeyboardResponse,
                 stimulus:` <div class="canvas-holder" style="display:flex; gap:1rem;">
                             <div class="holder-1">
-                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1-${trialIndex}" width=500 height=500 style="border:2px solid black;"></canvas>
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1-${trialIndex}" width=400 height=400 style="border:2px solid black;"></canvas>
                             <p class="feedback"></p>
                             </div>
                             <div class="holder-2">
-                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2-${trialIndex}" width=500 height=500 style="border:2px solid black;"></canvas>
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2-${trialIndex}" width=400 height=400 style="border:2px solid black;"></canvas>
                             <p class="feedback"></p>
                             </div>`,
                 choices : ["ArrowLeft", "ArrowRight"],
@@ -707,10 +737,13 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                             trialData["Chosen_Canvas"] = chosenCanvasID;
                             trialData["Response_Correct"] = "true"
                             const chosenCanvas = document.querySelector(`#${chosenCanvasID}`)
-                            const parent = chosenCanvas.parentElement
-                            const feedbackElement = parent.querySelector(".feedback")
-                            feedbackElement.textContent = feedbackCorrect;
-                            feedbackElement.style.fontSize = "3rem";
+                            drawFeedback(feedbackImgSource,true,chosenCanvas);
+
+
+                            // const parent = chosenCanvas.parentElement
+                            // const feedbackElement = parent.querySelector(".feedback")
+                            // feedbackElement.textContent = feedbackCorrect;
+                            // feedbackElement.style.fontSize = "3rem";
                             setTimeout( () => {jsPsych.finishTrial(trialData)},1000)
                             
                             
@@ -721,19 +754,19 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                             trialData["Response_Correct"] = "false"
                             const chosenCanvas = document.querySelector(`#${chosenCanvasID}`)
                             console.log(document.querySelectorAll("canvas"))
-                            const parent = chosenCanvas.parentElement
-                            const feedbackElement = parent.querySelector(".feedback")
-                            feedbackElement.textContent = feedbackIncorrect;
-                            feedbackElement.style.fontSize = "3rem";
+                            drawFeedback(feedbackImgSource,false,chosenCanvas);
+                            // const parent = chosenCanvas.parentElement
+                            // const feedbackElement = parent.querySelector(".feedback")
+                            // feedbackElement.textContent = feedbackIncorrect;
+                            // feedbackElement.style.fontSize = "3rem";
                             setTimeout( () => {jsPsych.finishTrial(trialData)},1000)
                             
                         }
 
 
-                    })
-                    }}, 
-                    options: {once:true},
-                    post_trial_gap: 900,
+                    }, {once:true})
+                    }},
+                    post_trial_gap: 300,
             }
             trials.push(choice_trial)
         }
@@ -754,7 +787,6 @@ async function runExperiment(){
     timeline.push(...trials)
     jsPsych.run(timeline)
    
-
 }
 
 runExperiment()
