@@ -517,6 +517,8 @@ function drawFeedback(imageSource,correctFeedback,c){
         canvas = c.getContext('2d');
     }
 
+    else{}
+
     let feedbackImage 
     if (correctFeedback){
         feedbackImage = imageSource[0];
@@ -713,13 +715,9 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                     
                     if (document.querySelector(`#${correctOption}`) || document.querySelector(`#${incorrectOption}`))
                         {
-                        // console.log("the canvases exist")
-                        document.addEventListener("keydown", (event)=> {
 
-                        const feedbackCorrect = "✅";
-                        const feedbackIncorrect = "❌";
-                    
-                        const keyPress = event.key;
+                        function keyHandler(event){
+                            const keyPress = event.key;
                         trialData["Response"] = keyPress;
                         const correctCanvas = correctOption;
                         let chosenCanvasID = null;
@@ -738,13 +736,11 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                             trialData["Response_Correct"] = "true"
                             const chosenCanvas = document.querySelector(`#${chosenCanvasID}`)
                             drawFeedback(feedbackImgSource,true,chosenCanvas);
+                            document.removeEventListener("keydown",keyHandler)
 
-
-                            // const parent = chosenCanvas.parentElement
-                            // const feedbackElement = parent.querySelector(".feedback")
-                            // feedbackElement.textContent = feedbackCorrect;
-                            // feedbackElement.style.fontSize = "3rem";
-                            setTimeout( () => {jsPsych.finishTrial(trialData)},1000)
+                            setTimeout( () => {
+                                jsPsych.finishTrial(trialData)
+                            },1000)
                             
                             
                         }
@@ -755,16 +751,20 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                             const chosenCanvas = document.querySelector(`#${chosenCanvasID}`)
                             console.log(document.querySelectorAll("canvas"))
                             drawFeedback(feedbackImgSource,false,chosenCanvas);
-                            // const parent = chosenCanvas.parentElement
-                            // const feedbackElement = parent.querySelector(".feedback")
-                            // feedbackElement.textContent = feedbackIncorrect;
-                            // feedbackElement.style.fontSize = "3rem";
-                            setTimeout( () => {jsPsych.finishTrial(trialData)},1000)
+                            document.removeEventListener("keydown",keyHandler)
+
+                            setTimeout( () => {
+                                jsPsych.finishTrial(trialData)
+                                
+                            }
+                            ,1000)
                             
                         }
 
+                        }
 
-                    }, {once:true})
+                        document.addEventListener("keydown",keyHandler)
+                        
                     }},
                     post_trial_gap: 300,
             }
