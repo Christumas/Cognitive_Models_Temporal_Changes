@@ -599,11 +599,13 @@ async function getFile(file) {
     }  
 }
 
+
+
 //function to generate trials specified by designfile
 async function generateTrials(functionArray, colourdict, textureArray,designFile){
-    const colours = Object.keys(colourdict)
-    console.log(colours)
-    const trials = []
+    const colours = Object.keys(colourdict);
+    console.log(colours);
+    const trials = [];
 
     const table = await getFile(designFile);
     table.forEach( (row) => {
@@ -737,8 +739,11 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                             const chosenCanvas = document.querySelector(`#${chosenCanvasID}`)
                             drawFeedback(feedbackImgSource,true,chosenCanvas);
                             document.removeEventListener("keydown",keyHandler)
+                            
 
                             setTimeout( () => {
+                                participantScore.push(1);
+                                console.log(`Current Score: ${participantScore}`)
                                 jsPsych.finishTrial(trialData)
                             },1000)
                             
@@ -752,8 +757,11 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
                             console.log(document.querySelectorAll("canvas"))
                             drawFeedback(feedbackImgSource,false,chosenCanvas);
                             document.removeEventListener("keydown",keyHandler)
+                            
 
                             setTimeout( () => {
+                                participantScore.push(0);
+                                console.log(`Current Score: ${participantScore}`)
                                 jsPsych.finishTrial(trialData)
                                 
                             }
@@ -772,19 +780,101 @@ async function generateTrials(functionArray, colourdict, textureArray,designFile
         }
     })
 
+
     return trials
 }
 
 
 const csv = '../Graph_Matrices_Generation/sample_designfile.csv'
 
+function calculateScore(score){
+    
+    if (score.length === 0){return 0;}
 
+    //provide the score as a percentage
+    let initialValue = 0;
+    const sum = score.reduce( (partialSum, currentValue) => {
+        return partialSum + currentValue
+    }, initialValue)
+
+    let percentageScore = (sum / score.length) * 100;
+
+    return percentageScore.toFixed(2)
+
+
+}
+
+function evaluateScore(percentageScore){
+
+    let evaluation;
+
+    switch (true){
+        case percentageScore < 50:
+            evaluation = "You could do better!"
+            break;
+        
+        case percentageScore < 70:
+            evaluation = "Good job, keep going!"
+            break;
+
+        case percentageScore < 80:
+            evaluation = "Very nicely done!"
+            break;
+
+        case percentageScore < 90:
+            evaluation = "Excellent, you are on fire!!"
+            break;
+
+        case percentageScore <=100:
+            evaluation = "A Perfect score! Be proud of yourself!"
+            break;
+
+        default:
+            evaluation = "Try harder! You got this!"
+    }
+
+    return evaluation;
+
+
+}
+
+
+function createEvaluationScreen(score,evaluation){
+    const evaluationScreen = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+        <div class="evaluationBox" style="display:flex; gap:1rem;">
+            <p id="scoreDescription">You got <span id="percentageScore">${score}%</span> right!</p>
+            <p id="evaluation">${evaluation}</p>
+        </div>
+        <h3>Press SPACE to continue with the next block when you are ready!</h3>`,
+        choices : [' ']
+    }
+
+    return evaluationScreen
+
+}
+
+ //keep track of block score to give them feedback
+const participantScore = [];
 
 async function runExperiment(){
     const trials = await generateTrials(drawShapes,colourVals,textures,csv)
+   
     console.log(trials);
     console.log(trials.length)
     timeline.push(...trials)
+    
+    timeline.push({
+        type:jsPsychCallFunction,
+        func: () =>{
+            const scorePercentage = calculateScore(participantScore);
+            const eval = evaluateScore(scorePercentage);
+            const evalScreen = createEvaluationScreen(scorePercentage,eval);
+            jsPsych.addNodeToEndOfTimeline({timeline: [evalScreen]});
+        }
+    })
+    
     jsPsych.run(timeline)
    
 }
