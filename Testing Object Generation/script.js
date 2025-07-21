@@ -549,7 +549,6 @@ async function getFile(file) {
       dynamicTyping: true,
       skipEmptyLines: true,
     });
-
     return parsedData.data;
   } catch (error) {
     console.log("Couldnt load file");
@@ -564,7 +563,7 @@ async function generateTrials(
   designFile
 ) {
   const colours = Object.keys(colourdict);
-  console.log(colours);
+//   console.log(colours);
   const trials = [];
 
   const table = await getFile(designFile);
@@ -579,6 +578,7 @@ async function generateTrials(
       const shapeNode = row["Shape_stim"];
 
       let trialData = {
+        Block : row["Block Number"],
         Colour_stim: row["Colour_stim"],
         Texture_stim: row["Texture_stim"],
         Shape_stim: row["Shape_stim"],
@@ -594,7 +594,7 @@ async function generateTrials(
       const trial = {
         type: jsPsychHtmlKeyboardResponse,
         stimulus: ` <div class="canvas-holder">
-                            <canvas id="jspsych-canvas-keyboard-response-stimulus" width=400 height=400 style="border:2px solid black;"></canvas>
+                            <canvas id="jspsych-canvas-keyboard-response-stimulus" width=400 height=400></canvas>
                             </div>`,
         on_load: function () {
           drawShapes[shapeNode](colourNode, textureNode);
@@ -623,6 +623,7 @@ async function generateTrials(
 
       //manually add the relevant data as we are manually ending the trial
       let trialData = {
+        Block : row["Block Number"],
         Colour_stim: row["Colour_stim"],
         Texture_stim: row["Texture_stim"],
         Shape_stim: row["Shape_stim"],
@@ -639,11 +640,11 @@ async function generateTrials(
         type: jsPsychHtmlKeyboardResponse,
         stimulus: ` <div class="canvas-holder" style="display:flex; gap:1rem;">
                             <div class="holder-1">
-                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1-${trialIndex}" width=400 height=400 style="border:2px solid black;"></canvas>
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1-${trialIndex}" width=400 height=400></canvas>
                             <p class="feedback"></p>
                             </div>
                             <div class="holder-2">
-                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2-${trialIndex}" width=400 height=400 style="border:2px solid black;"></canvas>
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2-${trialIndex}" width=400 height=400></canvas>
                             <p class="feedback"></p>
                             </div>`,
         choices: ["ArrowLeft", "ArrowRight"],
@@ -707,7 +708,7 @@ async function generateTrials(
 
               if (chosenCanvasID == correctCanvas) {
                 trialData["Chosen_Canvas"] = chosenCanvasID;
-                trialData["Response_Correct"] = "true";
+                trialData["Response_Correct"] = 1;
                 const chosenCanvas = document.querySelector(
                   `#${chosenCanvasID}`
                 );
@@ -715,13 +716,13 @@ async function generateTrials(
                 document.removeEventListener("keydown", keyHandler);
 
                 setTimeout(() => {
-                  participantScore.push(1);
-                  console.log(`Current Score: ${participantScore}`);
+                  participantResponseArray.push(1);
+                  console.log(`Current Score: ${participantResponseArray}`);
                   jsPsych.finishTrial(trialData);
                 }, 1000);
               } else {
                 trialData["Chosen_Canvas"] = chosenCanvasID;
-                trialData["Response_Correct"] = "false";
+                trialData["Response_Correct"] = 0;
                 const chosenCanvas = document.querySelector(
                   `#${chosenCanvasID}`
                 );
@@ -730,8 +731,8 @@ async function generateTrials(
                 document.removeEventListener("keydown", keyHandler);
 
                 setTimeout(() => {
-                  participantScore.push(0);
-                  console.log(`Current Score: ${participantScore}`);
+                  participantResponseArray.push(0);
+                  console.log(`Current Score: ${participantResponseArray}`);
                   jsPsych.finishTrial(trialData);
                 }, 1000);
               }
@@ -752,20 +753,38 @@ async function generateTrials(
 const csv = "../Graph_Matrices_Generation/sample_designfile.csv";
 
 function calculateScore(score) {
-  if (score.length === 0) {
-    return 0;
+  if (Array.isArray(score)) {
+    if (score.length === 0) {
+      return 0;
+    }
+
+    //provide the score as a percentage
+    let initialValue = 0;
+    const sum = score.values.reduce((partialSum, currentValue) => {
+      return partialSum + currentValue;
+    }, initialValue);
+
+    let percentageScore = (sum / score.length) * 100;
+
+    return percentageScore.toFixed(2);
   }
 
-  //provide the score as a percentage
-  let initialValue = 0;
-  const sum = score.reduce((partialSum, currentValue) => {
-    return partialSum + currentValue;
-  }, initialValue);
+  else{
+    //if score is an object from jspsych.data.get()
+      let initialValue = 0;
+      let scoreArray = score.values;
+      const sum = scoreArray.reduce((partialSum, currentValue) => {
+      return partialSum + currentValue;
+    }, initialValue);
 
-  let percentageScore = (sum / score.length) * 100;
+    let percentageScore = (sum/scoreArray.length)*100
+    return percentageScore.toFixed(2);
 
-  return percentageScore.toFixed(2);
+  }
+
 }
+
+  
 
 function evaluateScore(percentageScore) {
   let evaluation;
@@ -798,6 +817,7 @@ function evaluateScore(percentageScore) {
   return evaluation;
 }
 
+
 function createEvaluationScreen(score, evaluation) {
   const evaluationScreen = {
     type: jsPsychHtmlKeyboardResponse,
@@ -814,18 +834,44 @@ function createEvaluationScreen(score, evaluation) {
 }
 
 //keep track of block score to give them feedback
-const participantScore = [];
+const participantResponseArray = [];
+let totalBlockScore
+let evaluation   
 
 async function runExperiment() {
   const trials = await generateTrials(drawShapes, colourVals, textures, csv);
 
-  console.log(trials);
-  console.log(trials.length);
-  timeline.push(...trials);
+  const endscreen = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <div class="evaluationBox" style="display:flex; gap:1rem;">
+            <p id="scoreDescription">You got <span id="percentageScore"></span> right!</p>
+            <p id="evaluation"></p>
+        </div>
+        <h3>Press SPACE to continue with the next block when you are ready!</h3>`,
+    choices: [" "],
+    on_load: function (){
+      let scoreArray = jsPsych.data.get().select("Response_Correct")      
+      let percentageCorrect = calculateScore(scoreArray);
+      let evaluationMessage = evaluateScore(percentageCorrect);
 
-  console.log(timeline);
+      const percentageScore = document.querySelector("#percentageScore")
+      percentageScore.textContent = `${percentageCorrect}%`;
+      const evaluation = document.querySelector("#evaluation");
+      evaluation.textContent = evaluationMessage;
+
+      
+    }
+
+  }
+ 
+  timeline.push(...trials);
+  timeline.push(endscreen)
+  
+
   jsPsych.run(timeline);
-  jsPsych;
+
+
 }
 
 runExperiment();
