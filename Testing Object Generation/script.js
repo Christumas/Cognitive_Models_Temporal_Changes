@@ -726,13 +726,11 @@ async function generateTrials(
                 const chosenCanvas = document.querySelector(
                   `#${chosenCanvasID}`
                 );
-                console.log(document.querySelectorAll("canvas"));
                 drawFeedback(feedbackImgSource, false, chosenCanvas);
                 document.removeEventListener("keydown", keyHandler);
 
                 setTimeout(() => {
                   participantResponseArray.push(0);
-                  console.log(`Current Score: ${participantResponseArray}`);
                   jsPsych.finishTrial(trialData);
                 }, 1000);
               }
@@ -833,10 +831,7 @@ function createEvaluationScreen(score, evaluation) {
   return evaluationScreen;
 }
 
-//keep track of block score to give them feedback
-const participantResponseArray = [];
-let totalBlockScore
-let evaluation   
+
 
 async function runExperiment() {
   const trials = await generateTrials(drawShapes, colourVals, textures, csv);
