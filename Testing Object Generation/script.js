@@ -716,8 +716,6 @@ async function generateTrials(
                 document.removeEventListener("keydown", keyHandler);
 
                 setTimeout(() => {
-                  participantResponseArray.push(1);
-                  console.log(`Current Score: ${participantResponseArray}`);
                   jsPsych.finishTrial(trialData);
                 }, 1000);
               } else {
@@ -730,7 +728,6 @@ async function generateTrials(
                 document.removeEventListener("keydown", keyHandler);
 
                 setTimeout(() => {
-                  participantResponseArray.push(0);
                   jsPsych.finishTrial(trialData);
                 }, 1000);
               }
