@@ -567,6 +567,192 @@ async function generateTrials(
   const trials = [];
 
   const table = await getFile(designFile);
+  const uniqueBlocks = [...new Set(table.map(row => row["Block Number"]))]
+  
+  const blockAndTrials = {};
+  for (block of uniqueBlocks) {
+    table.forEach((row) => {
+      if (
+        row["Block Number"] === block &&
+        !row["Colour_choice"] &&
+        !row["Shape_choice"] &&
+        !row["Texture_choice"]
+      ) {
+        const trial = {
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: ` <div class="canvas-holder">
+                            <canvas id="jspsych-canvas-keyboard-response-stimulus" width=400 height=400></canvas>
+                            </div>`,
+          on_load: function () {
+            drawShapes[shapeNode](colourNode, textureNode);
+          },
+          choices: [],
+          trial_duration: 1000,
+          post_trial_gap: 300,
+          data: {
+            Colour_stim: row["Colour_stim"],
+            Shape_stim: row["Shape_stim"],
+            Texture_stim: row["Texture_stim"],
+          }
+
+        }
+
+        if(!blockAndTrials[block]){
+          blockAndTrials[block] = []
+        }
+        blockAndTrials[block].push(trial);
+      }
+
+      else if(row["Block Number"]===block &&
+        row["Colour_choice"] &&
+        row["Shape_choice"] &&
+        row["Texture_choice"]
+      ){
+        const colourNodeStim = colourVals[colours[row["Colour_stim"]]];
+        const textureNodeStim = textures[row["Texture_stim"]];
+        const shapeNodeStim = row["Shape_stim"];
+
+        const colourNodeChoice = colourVals[colours[row["Colour_choice"]]];
+        const textureNodeChoice = textures[row["Texture_choice"]];
+        const shapeNodeChoice = row["Shape_choice"];
+
+        const trialIndex = trials.length;
+        const canvasIDs = [`canvas-1-${trialIndex}`, `canvas-2-${trialIndex}`];
+
+        const choice_trial = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: ` <div class="canvas-holder" style="display:flex; gap:1rem;">
+                            <div class="holder-1">
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1-${trialIndex}" width=400 height=400></canvas>
+                            <p class="feedback"></p>
+                            </div>
+                            <div class="holder-2">
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2-${trialIndex}" width=400 height=400></canvas>
+                            <p class="feedback"></p>
+                            </div>`,
+        choices: ["ArrowLeft", "ArrowRight"],
+        prompt: `<p style="margin-top:0.5rem;">Which of these objects are likely to come next?</p>`,
+        response_ends_trial: false,
+        on_load: function () {
+          //manually add RT data because using response_ends_trial prevents rt from being recorded by the plugin
+          const trialStart = performance.now();
+
+          //shuffle the canvas ids on every choice trial so the stimulus and generated objects
+          //are drawn on different canvases
+          for (let i = canvasIDs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [canvasIDs[i], canvasIDs[j]] = [canvasIDs[j], canvasIDs[i]];
+            console.log(canvasIDs[0], canvasIDs[1]);
+          }
+
+          //participants should choose the next shape according to the graph structure, so the
+          //stimulus shapes, therefore the correct answer should be the canvas at index [0] in the array
+
+          drawShapes[shapeNodeStim](
+            colourNodeStim,
+            textureNodeStim,
+            canvasIDs[0]
+          );
+          drawShapes[shapeNodeChoice](
+            colourNodeChoice,
+            textureNodeChoice,
+            canvasIDs[1]
+          );
+
+          console.log("Correct option:", canvasIDs[0]);
+          console.log("Incorrect option:", canvasIDs[1]);
+
+          let correctOption = canvasIDs[0];
+          let incorrectOption = canvasIDs[1];
+
+          trialData["Choice_Canvas"] = canvasIDs[1]; //update our trial data object
+          trialData["Stim_Canvas"] = canvasIDs[0];
+
+          if (
+            document.querySelector(`#${correctOption}`) ||
+            document.querySelector(`#${incorrectOption}`)
+          ) {
+            function keyHandler(event) {
+              const keyPress = event.key;
+              const keyPressTime = performance.now();
+              const reactionTimeForTrial = Math.round(keyPressTime - trialStart);
+              trialData["Response"] = keyPress;
+              trialData["RT"] = reactionTimeForTrial;
+              const correctCanvas = correctOption;
+              let chosenCanvasID = null;
+
+              if (keyPress == "ArrowLeft") {
+                chosenCanvasID = `canvas-1-${trialIndex}`;
+                console.log("Chosen Canvas:", chosenCanvasID);
+              } else if (keyPress == "ArrowRight") {
+                chosenCanvasID = `canvas-2-${trialIndex}`;
+                console.log("Chosen Canvas:", chosenCanvasID);
+              }
+
+              if (chosenCanvasID == correctCanvas) {
+                trialData["Chosen_Canvas"] = chosenCanvasID;
+                trialData["Response_Correct"] = 1;
+                const chosenCanvas = document.querySelector(
+                  `#${chosenCanvasID}`
+                );
+                drawFeedback(feedbackImgSource, true, chosenCanvas);
+                document.removeEventListener("keydown", keyHandler);
+
+                setTimeout(() => {
+                  jsPsych.finishTrial(trialData);
+                }, 1000);
+              } else {
+                trialData["Chosen_Canvas"] = chosenCanvasID;
+                trialData["Response_Correct"] = 0;
+                const chosenCanvas = document.querySelector(
+                  `#${chosenCanvasID}`
+                );
+                drawFeedback(feedbackImgSource, false, chosenCanvas);
+                document.removeEventListener("keydown", keyHandler);
+
+                setTimeout(() => {
+                  jsPsych.finishTrial(trialData);
+                }, 1000);
+              }
+            }
+
+            document.addEventListener("keydown", keyHandler);
+          }
+
+        }
+        
+      }
+      blockAndTrials[block].push(choice_trial);
+
+
+
+      } 
+
+    });
+  }
+
+  console.log("Block and Trials", blockAndTrials)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   table.forEach((row) => {
     if (
       !row["Colour_choice"] &&
@@ -576,6 +762,7 @@ async function generateTrials(
       const colourNode = colourVals[colours[row["Colour_stim"]]];
       const textureNode = textures[row["Texture_stim"]];
       const shapeNode = row["Shape_stim"];
+
 
       let trialData = {
         Block : row["Block Number"],
@@ -851,8 +1038,6 @@ async function runExperiment() {
       percentageScore.textContent = `${percentageCorrect}%`;
       const evaluation = document.querySelector("#evaluation");
       evaluation.textContent = evaluationMessage;
-
-      
     }
 
   }
