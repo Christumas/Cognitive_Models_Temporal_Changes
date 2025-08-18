@@ -3,3 +3,5 @@
 .jpg
 /Object Generation Demonstration
 Experiment
+node_modules
+*.json
