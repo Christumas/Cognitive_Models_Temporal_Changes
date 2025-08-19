@@ -1,0 +1,8 @@
+*.svg
+.png
+.jpg
+/Object Generation Demonstration
+node_modules
+*.json
+DesignFiles
+images
