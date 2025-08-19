@@ -2,9 +2,5 @@
 .png
 .jpg
 /Object Generation Demonstration
-plugins
-Shapes
-Textures
-Colours
 node_modules
 *.json
