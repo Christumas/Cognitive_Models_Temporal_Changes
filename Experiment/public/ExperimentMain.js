@@ -25,6 +25,7 @@ async function getProlificID() {
   }
 }
 
+//--Handling the frontend to backend communication logic--//
 async function getDesignFile(designFileList) {
   try {
     let chosenDesignFile;
@@ -33,9 +34,11 @@ async function getDesignFile(designFileList) {
     //send get request to the backend to see if the prolific ID exists, if it already exists,
     //it means the participant already did the first_session
     let baseAPIURL = `http://localhost:5000`;
-    let response = await fetch(baseAPIURL + `/check?PROLIFIC_PID=${prolificID}`); //check api to see if the prolific id already exists
-    if(!response.ok){
-        throw new Error("Error executing check API call")
+    let response = await fetch(
+      baseAPIURL + `/check?PROLIFIC_PID=${prolificID}`
+    ); //check api to see if the prolific id already exists
+    if (!response.ok) {
+      throw new Error("Error executing check API call");
     }
     let data = await response.json(); //parse the response to json
 
@@ -84,7 +87,7 @@ async function getDesignFile(designFileList) {
       console.log("Session 2 is running");
       isDayTwo = true;
       let chosenDesignFile = data.file;
-      console.log(chosenDesignFile)
+      console.log(chosenDesignFile);
 
       return chosenDesignFile;
     }
@@ -93,7 +96,10 @@ async function getDesignFile(designFileList) {
   }
 }
 
+//---Experiment flow---//
+
 async function runExperiment() {
+  //grab design file
   const designFile = await getDesignFile(designFileList);
 
   //create experiment object
@@ -102,28 +108,89 @@ async function runExperiment() {
   await mainExperiment.loadDesignFile(designFile);
   //generate the trials for each block
   await mainExperiment.generateTrials();
+  //store the trials in a variable
+  const experimentBlockTrials = mainExperiment.blockAndTrials;
 
-  //generate the trials for the sorting block (this will only be triggered )
+  //generate the trials for the sorting block (this will only be triggered for session 2 )
   await mainExperiment.createSortingBlock();
   const sortingTrials = mainExperiment.sortingTrials;
 
-  //store them in a variable
-  const experimentBlockTrials = mainExperiment.blockAndTrials;
-
   console.log(experimentBlockTrials);
 
+  //add the welcome screen
+  timeline.push(welcomeScreen);
+  timeline.push(ConsentForm);
+  timeline.push(instructionsScreen);
+
+  //add the trials to the timeline
   for (let block in experimentBlockTrials) {
     const trials = experimentBlockTrials[block];
     timeline.push(...trials);
     const performanceScreen = mainExperiment.generatePerformanceSummary(block);
     timeline.push(performanceScreen);
+    timeline.push(postBlockPrompt);
   }
 
+  //sorting block is only added if it is the second session
   if (isDayTwo) {
+    console.log("sorting trials loaded");
     timeline.push(sortingTrials);
+    console.log("end screen added")
+    timeline.push(endScreen);
+  } else {
+    timeline.push(endScreen);
   }
 
   jsPsych.run(timeline);
 }
 
 runExperiment();
+
+//-------------Code to generate the consent, welcome, instruction and post block screens------//
+const welcomePrompt = `<p style="font-size:1.5rem;">Welcome to our experiment!</p>`;
+const welcomeScreen = new Screen(jsPsych, welcomePrompt, [" "]);
+
+const instructionsPrompt = `
+<div style="padding:2rem; font-size:1.2rem;">
+<p>In this game you will be presented with abstract objects presented in series.
+Once in a while, you will be shown two abstract objects and you are required to pick the object, which you think
+is the next object.</p>
+<p >You will play a total of 8 blocks of this game! Press SPACE to proceed</p>
+<p>Good luck!</p>
+</div>`;
+const instructionsScreen = new Screen(jsPsych, instructionsPrompt, [" "]);
+
+let check_consent = function () {
+  const items = document.querySelectorAll(".consent-item");
+  const allChecked = Array.from(items).every((item) => item.checked); //returns a boolean if all the items are ticked or not
+
+  if (!allChecked) {
+    alert("Please make sure you checked all the boxes before proceeding");
+    return false;
+  }
+
+  return true;
+};
+
+const ConsentForm = {
+  type: jsPsychExternalHtml,
+  url: "consent/consent_form.html",
+  cont_btn: "Continue",
+  check_fn: check_consent,
+  execute_script: true, //for when your callback function check_consent returns true
+};
+
+const postBlockPrompt = `
+    <div>
+    <p>The next block will begin. Press SPACE to proceed.</p>
+    </div>
+`
+const postBlockScreen = new Screen(jsPsych, postBlockPrompt, [' '])
+    
+const endScreenPrompt = `
+    <div>
+    <p>You've have completed the game!</p>
+    <p>Thank you for playing! </p>
+    <p>Press SPACE to exit the game!</p>
+    </div>`;
+const endScreen = new Screen(jsPsych, endScreenPrompt, [" "]);
