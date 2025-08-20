@@ -128,14 +128,16 @@ async function runExperiment() {
     timeline.push(...trials);
     const performanceScreen = mainExperiment.generatePerformanceSummary(block);
     timeline.push(performanceScreen);
-    timeline.push(postBlockPrompt);
+    if(block < 8){
+      timeline.push(postBlockPrompt);
+    }
+    
   }
 
   //sorting block is only added if it is the second session
   if (isDayTwo) {
-    console.log("sorting trials loaded");
+    timeline.push(secondBlockScreen);
     timeline.push(sortingTrials);
-    console.log("end screen added")
     timeline.push(endScreen);
   } else {
     timeline.push(endScreen);
@@ -186,6 +188,14 @@ const postBlockPrompt = `
     </div>
 `
 const postBlockScreen = new Screen(jsPsych, postBlockPrompt, [' '])
+
+const secondBlockPrompt = `
+    <div>
+    <p>You will play one final block where you will arrange stuff.</p>
+    </div>
+
+`
+const secondBlockScreen = new Screen(jsPsych, secondBlockPrompt, [' '])
     
 const endScreenPrompt = `
     <div>

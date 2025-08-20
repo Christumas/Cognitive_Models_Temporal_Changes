@@ -5,7 +5,7 @@ import pg from "pg";
 import cors from "cors";
 
 const corsConfig = {
-    origin : ["http://localhost:5000", "http://localhost:9000/"],
+    origin : ["http://localhost:5000", "http://localhost:9000"],
     methods:["GET","POST"],
     allowedHeaders: ["Content-Type"]
 }
