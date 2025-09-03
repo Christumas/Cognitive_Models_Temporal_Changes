@@ -3,7 +3,7 @@
 .jpg
 /Object Generation Demonstration
 node_modules
-*.json
+DesignFileList.json
 DesignFiles
 images
 consent
