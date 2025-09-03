@@ -1,13 +1,16 @@
 jatos.onLoad(function () {
   const jsPsych = initJsPsych({
     override_safe_mode: true,
-    on_finish: function () {
+    on_finish: async function () {
       //jsPsych.data.get().localSave("csv","sampleData.csv")
+      await markCompleted(PROLIFICPID, currentSession)
     },
   });
   const timeline = [];
   const designFileFolder = "./DesignFiles";
   const designFileList = "./DesignFiles/DesignFileList.json";
+  const currentSession = null;
+  let PROLIFICPID = null;
   let isDayTwo = false;
 
   //STEPS
@@ -33,7 +36,9 @@ jatos.onLoad(function () {
   async function getDesignFile(designFileList) {
     try {
       let chosenDesignFile;
-      let prolificID = await getProlificID()
+      let prolificID = await getProlificID();
+      PROLIFICPID = prolificID; 
+
       //Logic:
       //send get request to the backend to see if the prolific ID exists, if it already exists,
       //it means the participant already did the first_session
@@ -47,7 +52,8 @@ jatos.onLoad(function () {
       let data = await response.json(); //parse the response to json
 
       if (!data.exists) {
-        console.log("Session 1 is running");
+        console.log("Session 1 is running, random assignment of design file");
+
         //---SESSION 1----//
         //participant prolific ID doesnt exist in the database, that means they are doing it for the first time,
         //therefore randomly assign a design file
@@ -88,21 +94,49 @@ jatos.onLoad(function () {
           throw new Error("Error, could not save participant");
 
         return chosenDesignFile;
-      } else {
+      } 
+      
+      //if PPID exists, but the participant hasnt completed session 1 or if it was page refresh after design file assignment,
+      //  we still return the session 1 design file
+      if(data.session === 1){
+        currentSession = data.session;
+        console.log("Session 1 wasnt completed, session 1 is running again")
+        return data.file
+      } 
+
+      if(data.session === 2){
         //-----SESSION 2-----//
-        //participant ID exists, therefore they need to be served the second design file returned by the API
+        //participant ID exists, and session 1 is completed, therefore they need to be served the second design file returned by the API
         //request
         console.log("Session 2 is running");
         isDayTwo = true;
+        currentSession = data.session;
         let chosenDesignFile = data.file;
         console.log(chosenDesignFile);
 
         return chosenDesignFile;
       }
+      
     } catch (error) {
       console.error("Couldn't grab file", error.message);
     }
   }
+
+  //function to ensure the completion of the experiment session is communicated to the backend 
+  async function markCompleted(prolificID, sessionNumber){
+    await fetch(`${baseAPIURL}/complete`, {
+      method: "POST",
+      headers : {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        prolificID: prolificID,
+        sessionNumber : sessionNumber
+      })
+    })
+  }
+
+
+
+
 
   //---Experiment flow---//
 
@@ -153,10 +187,20 @@ jatos.onLoad(function () {
       timeline.push(endScreen);
     }
 
+    jsPsych.data.addProperties({
+            design_file : designFile
+        }) //manually adding the designfile name to our final results
     jsPsych.run(timeline);
+
+    
   }
 
   runExperiment();
+
+
+
+
+
 
   //-------------Code to generate the consent, welcome, instruction and post block screens------//
   const welcomePrompt = `<p style="font-size:1.5rem;">Welcome to our experiment!</p>`;

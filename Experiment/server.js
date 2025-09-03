@@ -37,22 +37,44 @@ app.get("/check", async (req, res) => {
       [prolificID]
     );
 
-    //if the ID exists, that means the participant did session 1, we need to serve the file name for session 2
-    //and also update the date it was served to the table
+    //if the ID exists, that means the participant has visited the study link. However we need to ensure that session 1 was completed
+    //before serving the session 2 design file
     if (result.rows.length > 0) {
-      let file = result.rows[0].session_2;
-      let date = new Date().toISOString();
-      console.log(file);
+      const participant = result.rows[0]
+      //check if session 1 was complete => if not then serve session 1 file again (this ensures refreshes of the page doesnt start session 2)
+      if (!participant.session_1_complete){
+        res.json({
+          exists:true,
+          file: participant.session_1,
+          session: 1
+        });
+        return;
+      }
 
-      //record the date for when the second designfile is served in the database
-      await db.query(
+
+      //if session 1 is complete, session 2 is not complete => we serve session 2 file
+      if(participant.session_1_complete && !participant.session_2_complete){
+        const date = new Date().toISOString();
+         //record the date for when the second designfile is served in the database
+        await db.query(
         "UPDATE participantIDs SET date_assigned_s2 = $1 WHERE ppID=$2",
         [date, prolificID]
-      );
-      res.json({ file: file, exists: true });
+        );
+        res.json({
+          exists:true,
+          file:participant.session_2,
+          session:2
+        });
+        return;
+
+      }
+     
     } else {
-      res.json({ file: null, exists: false });
+      //PPID doesnt exist, therefore a random assignment should happen on the frontend after sending the response
+      res.json({ file: null, exists: false, sesion: null });
     }
+
+
   } catch (error) {
     res.status(500).json(error.message);
   }
@@ -78,6 +100,29 @@ app.post("/participants", async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+
+app.post("/complete", async(req,res) => {
+  try{
+    const {prolificID, sessionNumber} = req.body;
+
+    if(sessionNumber ===1){
+      await db.query(
+        "UPDATE participantids SET session_1_complete = TRUE WHERE ppID = $1", [prolificID]
+      )
+    } else if(sessionNumber === 2){
+      await db.query(
+        "UPDATE participantids SET session_2_complete = TRUE WHERE ppID = $2", [prolificID]
+      )
+    }
+    res.status(200).json({success:true, message: `${sessionNumber} was marked complete.`})
+
+  }
+
+  catch (error){
+    res.status(500).json({success:false, message: error.message})
+  }
+})
 
 app.listen(port, () => {
   console.log(`Listening at Port ${port}`);
