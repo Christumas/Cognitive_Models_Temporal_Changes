@@ -3,13 +3,11 @@ jatos.onLoad(function () {
     override_safe_mode: true,
     on_finish: async function () {
       //jsPsych.data.get().localSave("csv","sampleData.csv")
-      await markCompleted(PROLIFICPID, currentSession)
     },
   });
   const timeline = [];
   const designFileFolder = "./DesignFiles";
   const designFileList = "./DesignFiles/DesignFileList.json";
-  const currentSession = null;
   let PROLIFICPID = null;
   let isDayTwo = false;
 
@@ -22,121 +20,65 @@ jatos.onLoad(function () {
   //a. Run the method to load the design file and populate the blockAndTrials object
   //b. Run a loop to populate the timeline with all the trials and a block performance evaluation screen.
 
-  async function getProlificID() {
+  async function getURLParams() {
     const params = new URLSearchParams(window.location.search);
-    if (params.has("PROLIFIC_PID")) {
-      return params.get("PROLIFIC_PID");
-    }
-    else{
-      return jatos.urlQueryParameters.PROLIFIC_PID
+    if (params.has("PROLIFIC_PID") && params.has("SESSION_ID")) {
+      return [params.get("PROLIFIC_PID"), params.get("SESSION_ID")];
+    } else {
+      return [jatos.urlQueryParameters.PROLIFIC_PID, jatos.urlQueryParameters.SESSION_ID];
     }
   }
 
-  //--Handling the frontend to backend communication logic--//
+  //function to get a deterministic number which we will use as the index 
+  function hashString(str){
+    let hash = 0;
+    for(let i=0; i<str.length; i++){
+      hash = (hash <<5) - hash + str.charCodeAt(i);
+      hash |= 0;
+    }
+
+    return Math.abs(hash)
+  }
+
   async function getDesignFile(designFileList) {
     try {
-      let chosenDesignFile;
-      let prolificID = await getProlificID();
-      PROLIFICPID = prolificID; 
+      let chosenDesignFile
+      let [prolificID,sessionID] = await getURLParams();
+      PROLIFICPID = prolificID;
+    
+      //get list of design files
+      let response = await fetch(designFileList);
+      let designFiles = await response.json();
 
-      //Logic:
-      //send get request to the backend to see if the prolific ID exists, if it already exists,
-      //it means the participant already did the first_session
-      let baseAPIURL = `http://localhost:5000`;
-      let response = await fetch(
-        baseAPIURL + `/check?PROLIFIC_PID=${prolificID}`
-      ); //check api to see if the prolific id already exists
-      if (!response.ok) {
-        throw new Error("Error executing check API call");
-      }
-      let data = await response.json(); //parse the response to json
+      //hash the prolific id so we get a deterministic number which we will use as the index and grab a design file from the designFiles
+      //array
+      let designIndex = (hashString(prolificID) % designFiles.length) + 1;
+      console.log(designIndex);
 
-      if (!data.exists) {
-        console.log("Session 1 is running, random assignment of design file");
+      //get the first session file using the designfile index and then find the corresponding second session file
+      let firstSessionFiles = designFiles.filter((file) =>
+        file.endsWith("session1.csv")
+      );
+      let firstSessionFile = firstSessionFiles[designIndex];
+      let secondSessionFile = firstSessionFile.replace("session1", "session2");
 
-        //---SESSION 1----//
-        //participant prolific ID doesnt exist in the database, that means they are doing it for the first time,
-        //therefore randomly assign a design file
-        //THIS WILL BE FOR SESSION 1
-        let response = await fetch(designFileList);
-        let designFiles = await response.json();
-        let firstSessionFiles = designFiles.filter((file) =>
-          file.endsWith("session1.csv")
-        );
-
-        let fileIndex = Math.floor(Math.random() * firstSessionFiles.length);
-        let fileName = firstSessionFiles[fileIndex];
-
-        //this goes in the POST request back to the database to be stored
-        chosenDesignFile = designFileFolder + "/" + fileName; //this will be the path to the file assigned to the participant
-        let dateFirstSession = new Date().toISOString();
-        let secondSessionFile = chosenDesignFile.replace(
-          "session1",
-          "session2"
-        );
-        const newParticipant = {
-          prolificID: prolificID,
-          firstSession: chosenDesignFile,
-          dateFirstSession: dateFirstSession,
-          secondSession: secondSessionFile,
-          dateSecondSession: null,
-        };
-
-        //send the information to the backend to be stored in the database with a POST request
-        let sendRequest = await fetch(baseAPIURL + `/participants`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newParticipant),
-        });
-        console.log(sendRequest);
-
-        if (!sendRequest.ok)
-          throw new Error("Error, could not save participant");
-
+      if(sessionID ===1){
+        chosenDesignFile = designFileFolder + "/" + firstSessionFile;
+        console.log(`First session running, returned file ${firstSessionFile}`);
         return chosenDesignFile;
-      } 
-      
-      //if PPID exists, but the participant hasnt completed session 1 or if it was page refresh after design file assignment,
-      //  we still return the session 1 design file
-      if(data.session === 1){
-        currentSession = data.session;
-        console.log("Session 1 wasnt completed, session 1 is running again")
-        return data.file
-      } 
-
-      if(data.session === 2){
-        //-----SESSION 2-----//
-        //participant ID exists, and session 1 is completed, therefore they need to be served the second design file returned by the API
-        //request
-        console.log("Session 2 is running");
+      } else{
+        chosenDesignFile = designFileFolder + "/" + secondSessionFile;
+        console.log(`Second session running, returned file ${secondSessionFile}`);
         isDayTwo = true;
-        currentSession = data.session;
-        let chosenDesignFile = data.file;
-        console.log(chosenDesignFile);
-
         return chosenDesignFile;
       }
-      
+        
     } catch (error) {
       console.error("Couldn't grab file", error.message);
     }
   }
 
-  //function to ensure the completion of the experiment session is communicated to the backend 
-  async function markCompleted(prolificID, sessionNumber){
-    await fetch(`${baseAPIURL}/complete`, {
-      method: "POST",
-      headers : {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        prolificID: prolificID,
-        sessionNumber : sessionNumber
-      })
-    })
-  }
-
-
-
-
+  
 
   //---Experiment flow---//
 
@@ -172,7 +114,7 @@ jatos.onLoad(function () {
         mainExperiment.generatePerformanceSummary(block);
       timeline.push(performanceScreen);
       if (block < 8) {
-        timeline.push(postBlockScreen   );
+        timeline.push(postBlockScreen);
       }
     }
 
@@ -188,19 +130,12 @@ jatos.onLoad(function () {
     }
 
     jsPsych.data.addProperties({
-            design_file : designFile
-        }) //manually adding the designfile name to our final results
+      design_file: designFile,
+    }); //manually adding the designfile name to our final results
     jsPsych.run(timeline);
-
-    
   }
 
   runExperiment();
-
-
-
-
-
 
   //-------------Code to generate the consent, welcome, instruction and post block screens------//
   const welcomePrompt = `<p style="font-size:1.5rem;">Welcome to our experiment!</p>`;
@@ -248,9 +183,8 @@ is the next object.</p>
     <p>You will now do one final block where you sort the different features of the objects, based off
     the order in which they appeared.</p>
     <p>Press SPACE to continue.</p>
-    </div>`
-  const secondBlockScreen = new Screen(jsPsych,secondBlockPrompt,[" "])
-  
+    </div>`;
+  const secondBlockScreen = new Screen(jsPsych, secondBlockPrompt, [" "]);
 
   const endScreenPrompt = `
     <div>
@@ -258,5 +192,12 @@ is the next object.</p>
     <p>Thank you for playing! </p>
     <p>Press SPACE to exit the game!</p>
     </div>`;
-  const endScreen = new Screen(jsPsych, endScreenPrompt, [" "]);
+  const endScreenCallback = () => {
+          const experimentData =jsPsych.data.get().csv();
+          jatos.appendResultData(experimentData);
+          console.log("Jatos appended data")
+          jatos.endStudy()
+          console.log("Jatos ended study");
+  }
+  const endScreen = new Screen(jsPsych, endScreenPrompt, [" "], null, endScreenCallback);
 });

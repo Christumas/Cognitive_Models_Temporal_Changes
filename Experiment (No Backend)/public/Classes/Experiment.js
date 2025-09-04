@@ -167,7 +167,7 @@ class Experiment {
 
             const choiceTrial = {
               type: jsPsychHtmlKeyboardResponse,
-              stimulus: ` <div class="canvas-holder" style="display:flex; gap:1rem;">
+              stimulus: ` <div class="canvas-holder" style="display:grid; gap:0.5rem; grid-template-columns:2;">
                             <div class="holder-1">
                             <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1-${trialNumber}" width=400 height=400></canvas>
                             <p class="feedback"></p>

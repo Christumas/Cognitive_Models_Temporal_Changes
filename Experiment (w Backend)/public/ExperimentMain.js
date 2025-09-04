@@ -1,0 +1,258 @@
+jatos.onLoad(function () {
+  const jsPsych = initJsPsych({
+    override_safe_mode: true,
+    on_finish: async function () {
+      //jsPsych.data.get().localSave("csv","sampleData.csv")
+      await markCompleted(PROLIFICPID, currentSession);
+    },
+  });
+  const timeline = [];
+  const designFileFolder = "./DesignFiles";
+  const designFileList = "./DesignFiles/DesignFileList.json";
+  let baseAPIURL = `http://localhost:5000`;
+  let currentSession = null;
+  let PROLIFICPID = null;
+  let isDayTwo = false;
+
+  //STEPS
+  //1. Create an async function which will get the design file from the design file folder for the participant.
+  //2. Create an async function runExperiment() which will handle the experiment flow and have the timeline ready
+  //   for the participant
+  //a. Create a designFile variable, run the async function to grab the design file and store it.
+  //b. Create an experiment object with jsPsych instance and the designFile
+  //a. Run the method to load the design file and populate the blockAndTrials object
+  //b. Run a loop to populate the timeline with all the trials and a block performance evaluation screen.
+
+  async function getProlificID() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("PROLIFIC_PID")) {
+      return params.get("PROLIFIC_PID");
+    } else {
+      return jatos.urlQueryParameters.PROLIFIC_PID;
+    }
+  }
+
+  //--Handling the frontend to backend communication logic--//
+  async function getDesignFile(designFileList) {
+    try {
+      let chosenDesignFile;
+      let prolificID = await getProlificID();
+      PROLIFICPID = prolificID;
+
+      //Logic:
+      //send get request to the backend to see if the prolific ID exists, if it already exists,
+      //it means the participant already did the first_session
+
+      let response = await fetch(
+        baseAPIURL + `/check?PROLIFIC_PID=${prolificID}`
+      ); //check api to see if the prolific id already exists
+      if (!response.ok) {
+        throw new Error("Error executing check API call");
+      }
+      let data = await response.json(); //parse the response to json
+
+      if (!data.exists) {
+        console.log("Session 1 is running, random assignment of design file");
+
+        //---SESSION 1----//
+        //participant prolific ID doesnt exist in the database, that means they are doing it for the first time,
+        //therefore randomly assign a design file
+        //THIS WILL BE FOR SESSION 1
+        let response = await fetch(designFileList);
+        let designFiles = await response.json();
+        let firstSessionFiles = designFiles.filter((file) =>
+          file.endsWith("session1.csv")
+        );
+
+        let fileIndex = Math.floor(Math.random() * firstSessionFiles.length);
+        let fileName = firstSessionFiles[fileIndex];
+
+        //this goes in the POST request back to the database to be stored
+        chosenDesignFile = designFileFolder + "/" + fileName; //this will be the path to the file assigned to the participant
+        let dateFirstSession = new Date().toISOString();
+        let secondSessionFile = chosenDesignFile.replace(
+          "session1",
+          "session2"
+        );
+        const newParticipant = {
+          prolificID: prolificID,
+          firstSession: chosenDesignFile,
+          dateFirstSession: dateFirstSession,
+          secondSession: secondSessionFile,
+          dateSecondSession: null,
+        };
+
+        //send the information to the backend to be stored in the database with a POST request
+        let sendRequest = await fetch(baseAPIURL + `/participants`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newParticipant),
+        });
+        console.log(sendRequest);
+
+        if (!sendRequest.ok)
+          throw new Error("Error, could not save participant");
+
+        return chosenDesignFile;
+      }
+
+      //if PPID exists, but the participant hasnt completed session 1 or if it was page refresh after design file assignment,
+      //  we still return the session 1 design file
+      if (data.session === 1) {
+        currentSession = data.session;
+        console.log(
+          `Session 1 wasnt completed, session 1 is running again with file ${data.file}`
+        );
+        return data.file;
+      }
+
+      if (data.exists && data.session === 2) {
+        //-----SESSION 2-----//
+        //participant ID exists, and session 1 is completed, therefore they need to be served the second design file returned by the API
+        //request
+        console.log("Session 2 is running");
+        isDayTwo = true;
+        currentSession = data.session;
+        let chosenDesignFile = data.file;
+        console.log(chosenDesignFile);
+
+        return chosenDesignFile;
+      }
+    } catch (error) {
+      console.error("Couldn't grab file", error.message);
+    }
+  }
+
+  //function to ensure the completion of the experiment session is communicated to the backend
+  async function markCompleted(prolificID, sessionNumber) {
+    await fetch(`${baseAPIURL}/complete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prolificID: prolificID,
+        sessionNumber: sessionNumber,
+      }),
+    });
+  }
+
+  //---Experiment flow---//
+
+  async function runExperiment() {
+    //grab design file
+    const designFile = await getDesignFile(designFileList);
+
+    //create experiment object
+    const mainExperiment = new Experiment(jsPsych, designFile);
+    //load the design file into the object so you can generate trials
+    await mainExperiment.loadDesignFile(designFile);
+    //generate the trials for each block
+    await mainExperiment.generateTrials();
+    //store the trials in a variable
+    const experimentBlockTrials = mainExperiment.blockAndTrials;
+
+    //generate the trials for the sorting block (this will only be triggered for session 2 )
+    await mainExperiment.createSortingBlock();
+    const sortingTrials = mainExperiment.sortingTrials;
+
+    console.log(experimentBlockTrials);
+
+    //add the welcome screen
+    // timeline.push(welcomeScreen);
+    // timeline.push(ConsentForm);
+    // timeline.push(instructionsScreen);
+
+    //add the trials to the timeline
+    for (let block in experimentBlockTrials) {
+      const trials = experimentBlockTrials[block];
+      timeline.push(...trials);
+      const performanceScreen =
+        mainExperiment.generatePerformanceSummary(block);
+      timeline.push(performanceScreen);
+      if (block < 8) {
+        timeline.push(postBlockScreen);
+      }
+    }
+
+    //sorting block is only added if it is the second session
+    if (isDayTwo) {
+      timeline.push(secondBlockScreen);
+      console.log("sorting trials loaded");
+      timeline.push(sortingTrials);
+      console.log("end screen added");
+      timeline.push(endScreen);
+    } else {
+      timeline.push(endScreen);
+    }
+
+    jsPsych.data.addProperties({
+      design_file: designFile,
+    }); //manually adding the designfile name to our final results
+    jsPsych.run(timeline);
+  }
+
+  runExperiment();
+
+  //-------------Code to generate the consent, welcome, instruction and post block screens------//
+  const welcomePrompt = `<p style="font-size:1.5rem;">Welcome to our experiment!</p>`;
+  const welcomeScreen = new Screen(jsPsych, welcomePrompt, [" "]);
+
+  const instructionsPrompt = `
+<div style="padding:2rem; font-size:1.2rem;">
+<p>In this game you will be presented with abstract objects presented in series.
+Once in a while, you will be shown two abstract objects and you are required to pick the object, which you think
+is the next object.</p>
+<p >You will play a total of 8 blocks of this game! Press SPACE to proceed</p>
+<p>Good luck!</p>
+</div>`;
+  const instructionsScreen = new Screen(jsPsych, instructionsPrompt, [" "]);
+
+  let check_consent = function () {
+    const items = document.querySelectorAll(".consent-item");
+    const allChecked = Array.from(items).every((item) => item.checked); //returns a boolean if all the items are ticked or not
+
+    if (!allChecked) {
+      alert("Please make sure you checked all the boxes before proceeding");
+      return false;
+    }
+
+    return true;
+  };
+
+  const ConsentForm = {
+    type: jsPsychExternalHtml,
+    url: "consent/consent_form.html",
+    cont_btn: "Continue",
+    check_fn: check_consent,
+    execute_script: true, //for when your callback function check_consent returns true
+  };
+
+  const postBlockPrompt = `
+    <div>
+    <p>The next block will begin. Press SPACE to proceed.</p>
+    </div>
+`;
+  const postBlockScreen = new Screen(jsPsych, postBlockPrompt, [" "]);
+
+  const secondBlockPrompt = `
+    <div>
+    <p>You will now do one final block where you sort the different features of the objects, based off
+    the order in which they appeared.</p>
+    <p>Press SPACE to continue.</p>
+    </div>`;
+  const secondBlockScreen = new Screen(jsPsych, secondBlockPrompt, [" "]);
+
+  const endScreenPrompt = `
+    <div>
+    <p>You've have completed the game!</p>
+    <p>Thank you for playing! </p>
+    <p>Press SPACE to exit the game!</p>
+    </div>`;
+  const endScreenCallback = () => {
+          const experimentData =jsPsych.data.get().csv();
+          jatos.appendResultData(experimentData);
+          console.log("Jatos appended data")
+          jatos.endStudy()
+          console.log("Jatos ended study");
+  }
+  const endScreen = new Screen(jsPsych, endScreenPrompt, [" "], null, endScreenCallback);
+});
