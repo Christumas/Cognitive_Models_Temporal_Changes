@@ -1,0 +1,11 @@
+*.svg
+.png
+.jpg
+/Object Generation Demonstration
+node_modules
+DesignFileList.json
+DesignFiles
+images
+consent
+1_ORA_Online_Studieninformationen.docx
+1_ORA_Online_Studieninformationen.pdf
