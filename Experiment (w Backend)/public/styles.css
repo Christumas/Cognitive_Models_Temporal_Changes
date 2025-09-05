@@ -1,37 +1,203 @@
-.evaluationBox{
-    display:flex;
-    gap:1rem;
-    justify-content: space-around;
-    align-items: center;
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+body{
+  font-family: "DM Sans", sans-serif !important;
+  font-optical-sizing: auto;
+  font-style: normal;
 }
 
-#scoreDescription{
-    font-size: 2rem;
+.evaluationBox {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
 }
 
-#percentageScore{
-    font-size: 2.5rem;
-    color:indianred;
+#scoreDescription {
+  font-size: 2rem;
 }
 
-#evaluation{
-    font-size: 2rem;
+#percentageScore {
+  font-size: 2.5rem;
+  color: rgb(225, 68, 68);
 }
 
-h3{
-    font-size: medium;
-    font-weight: 500;
+#evaluation {
+  font-size: 2rem;
 }
+
+h3 {
+  font-size: medium;
+  font-weight: 500;
+}
+
+.canvas-holder-choice {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(2);
+}
+
+.holder-1 {
+  grid-column: 1;
+}
+
+.holder-2 {
+  grid-column: 2;
+}
+
+.screen-prompt{
+  font-size: 1.2rem;
+  width:100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.screen-prompt p{
+  text-align: center;
+}
+
+.prompt-continue{
+  max-width:50%;
+}
+
+.ctnBTN{
+  border: none;
+  display: inline-block;
+  border-radius: 10px;
+  max-width: 100%;
+  padding:1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.ctnBTN:hover{
+    background-color: forestgreen;
+    color: white;
+}
+
+
 
 
 
 /* For screen sizes which are 500px and smaller  */
-@media screen and (max-width:500px) {
-    .jspsych-canvas-keyboard-response-stimulus{
-        width:80%;
-        height:100%;
-        margin:1rem;
+@media screen and (max-width: 601px) {
+  .canvas-holder-choice {
+    grid-template-columns: 1;
+    gap: 0.1rem;
+  }
 
+  .holder-1 {
+    grid-column: auto;
+  }
+
+  .holder-2 {
+    grid-column: auto;
+  }
+
+  .choice-prompt {
+    font-size: 1rem;
+  }
+
+  .screen-prompt p{
+  text-align: center;
+  padding:1rem;
+}
+}
+
+@media screen and (max-width: 900px) {
+  .free-sort-prompt,
+  #jspsych-free-sort-counter {
+    font-size: 1rem !important;
+  }
+
+  .jspsych-free-sort-arena {
+    width: 400px !important;
+    height: 400px !important;
+  }
+
+  .jspsych-free-sort-border {
+    width: 376px !important;
+    height: 376px !important;
+    border: 12px solid #fc9272 !important;
+  }
+
+  .jspsych-free-sort-draggable {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+    .screen-prompt p{
+      font-size: 1rem;
+    text-align: justify;
+    padding:1rem
     }
 }
 
+@media screen and (max-width: 680px) {
+  .free-sort-prompt,
+  #jspsych-free-sort-counter {
+    font-size: 1rem !important;
+  }
+
+  .jspsych-free-sort-arena {
+    width: 300px !important;
+    height: 300px !important;
+  }
+
+  .jspsych-free-sort-border {
+    width: 282px !important;
+    height: 282px !important;
+    border: 9px solid #fc9272 !important;
+  }
+
+  .jspsych-free-sort-draggable {
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  .screen-prompt p{
+     font-size: 1rem;
+  text-align: justify;
+  padding:1rem
+}
+}
+
+@media screen and (max-width: 450px) {
+  .free-sort-prompt,
+  #jspsych-free-sort-counter {
+    font-size: 0.8rem !important;
+  }
+
+  .jspsych-content-wrapper {
+    height: 100vh;
+  }
+
+  .jspsych-content {
+    margin: 4rem;
+  }
+
+  .jspsych-free-sort-arena {
+    width: 250px !important;
+    height: 250px !important;
+  }
+
+  .jspsych-free-sort-border {
+    width: 238px !important;
+    height: 238px !important;
+    border: 6px solid #fc9272 !important;
+  }
+
+  .jspsych-free-sort-draggable {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .screen-prompt p{
+     font-size: 1rem;
+  text-align: justify;
+  padding:1rem
+}
+}

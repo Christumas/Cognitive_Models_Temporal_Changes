@@ -292,8 +292,9 @@ class Feedback extends Shape{
     draw(c, correctFeedback){
         const canvas = this.getCanvas(c);
         const context = canvas.getContext("2d")
-        const imageSource = ["../images/positive_tick.png",
-                            "../images/negative_cross.png"];
+        const imageSource = ["images/tick-circle-svgrepo-com.svg",
+                            "images/cross-circle-svgrepo-com.svg",
+                            ];
         let feedbackImage;
         if (correctFeedback) {
             feedbackImage = imageSource[0];
@@ -304,7 +305,7 @@ class Feedback extends Shape{
         const img = new Image();
         img.src = feedbackImage;
         img.onload = () => {
-            context.drawImage(img, 0, 0, 125, 125);
+            context.drawImage(img, 0, 0, 115, 115);
         };
 
     }

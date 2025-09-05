@@ -9,13 +9,13 @@ const colourVals = {
 };
 
 const textures = [
-  "../Textures/texture_bottle.png",
-  "../Textures/texture_bricks.png",
-  "../Textures/texture_dots.png",
-  "../Textures/texture_flannel.png",
-  "../Textures/texture_grid.png",
-  "../Textures/texture_verticalLines.png",
-  "../Textures/texture_waves.png",
+  "Textures/texture_bottle.png",
+  "Textures/texture_bricks.png",
+  "Textures/texture_dots.png",
+  "Textures/texture_flannel.png",
+  "Textures/texture_grid.png",
+  "Textures/texture_verticalLines.png",
+  "Textures/texture_waves.png",
 ];
 
 const colours = Object.keys(colourVals);
@@ -66,6 +66,7 @@ class Experiment {
     const uniqueBlocks = [...new Set(table.map((row) => row["Block Number"]))];
     const shapes = this.shapes;
     const customScales = [1, 1, 1, 1, 1.5, 1, 1.5];
+    const jsPsych = this.jsPsych;
 
     for (let block of uniqueBlocks) {
       table.forEach((row) => {
@@ -100,6 +101,7 @@ class Experiment {
           Stim_Canvas: "",
           Distractor_Canvas: "",
           Keypress: "",
+          Touch_Target:"", //this is for when participants use a phone or tablet to do the task
           Response_Correct: "",
           RT: "",
         };
@@ -113,7 +115,7 @@ class Experiment {
             const trial = {
               type: jsPsychHtmlKeyboardResponse,
               stimulus: ` <div class="canvas-holder">
-                            <canvas id="jspsych-canvas-keyboard-response-stimulus" width=400 height=400></canvas>
+                            <canvas id="jspsych-canvas-keyboard-response-stimulus" width=300 height=300></canvas>
                         </div>`,
               on_load: function () {
                 //drawing logic
@@ -167,17 +169,19 @@ class Experiment {
 
             const choiceTrial = {
               type: jsPsychHtmlKeyboardResponse,
-              stimulus: ` <div class="canvas-holder" style="display:grid; gap:0.5rem; grid-template-columns:2;">
+              stimulus: ` <div class="choice-prompt">
+              <p>Which of these objects are likely to come next?</p>
+              </div>
+              <div class="canvas-holder-choice">
                             <div class="holder-1">
-                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1-${trialNumber}" width=400 height=400></canvas>
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-1-${trialNumber}" width=300 height=300></canvas>
                             <p class="feedback"></p>
                             </div>
                             <div class="holder-2">
-                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2-${trialNumber}" width=400 height=400></canvas>
+                            <canvas class="jspsych-canvas-keyboard-response-stimulus" id="canvas-2-${trialNumber}" width=300 height=300></canvas>
                             <p class="feedback"></p>
                           </div>`,
               choices: "NO_KEYS",
-              prompt: `<p style="margin-top:0.5rem;">Which of these objects are likely to come next?</p>`,
               response_ends_trial: false,
               post_trial_gap: 300,
               on_load: function () {
@@ -231,6 +235,7 @@ class Experiment {
                   document.querySelector(`#${correctOption}`) &&
                   document.querySelector(`#${incorrectOption}`)
                 ) {
+                  //handle keypresses 
                   function keyHandler(event) {
                     const keyPress = event.key;
 
@@ -274,7 +279,60 @@ class Experiment {
                       }, 1000);
                     }
                   }
+                  //handle touch screen behaviour for mobile
+                  function touchHandler(event){
+                    event.preventDefault();
+                    const touchTarget = event.target.id;
+                    const keyPressTime = performance.now();
+                    const reactionTimeForTrial = Math.round(
+                      keyPressTime - trialStart
+                    );
+                    trialData["RT"] = reactionTimeForTrial;
+                    const correctCanvas = correctOption;
+                    let chosenCanvasID = null;
+                    if(touchTarget === `canvas-1-${trialNumber}`){
+                      chosenCanvasID = `canvas-1-${trialNumber}` ;
+                      trialData["Touch_Target"] = "Left"
+                    } else if (touchTarget === `canvas-2-${trialNumber}`){
+                      trialData["Touch_Target"] = "Right"
+                      chosenCanvasID = `canvas-2-${trialNumber}`;
+                    }
+
+                    if (chosenCanvasID == correctCanvas) {
+                      let response = true;
+                      trialData["Response_Correct"] = 1;
+                      const feedback = new Feedback();
+                      feedback.draw(chosenCanvasID, response);
+                      
+                      document.removeEventListener("keydown", keyHandler);
+                      document.querySelector(`#canvas-1-${trialNumber}`).removeEventListener("touchStart", touchHandler);
+                      document.querySelector(`#canvas-2-${trialNumber}`).removeEventListener("touchStart", touchHandler);
+
+                      setTimeout(() => {
+                        jsPsych.finishTrial(trialData);
+                      }, 1000);
+                    } else {
+                      let response = false;
+                      trialData["Response_Correct"] = 0;
+                      const feedback = new Feedback();
+                      feedback.draw(chosenCanvasID, response);
+
+                      document.removeEventListener("keydown", keyHandler);
+                      document.querySelector(`#canvas-1-${trialNumber}`).removeEventListener("touchStart", touchHandler);
+                      document.querySelector(`#canvas-2-${trialNumber}`).removeEventListener("touchStart", touchHandler);
+                      setTimeout(() => {
+                        jsPsych.finishTrial(trialData);
+                      }, 1000);
+                    }
+
+
+                  }
+
+                  //add the event listeners for desktop and mobile
                   document.addEventListener("keydown", keyHandler);
+                  document.querySelector(`#canvas-1-${trialNumber}`).addEventListener("touchstart", touchHandler, {passive:false});
+                  document.querySelector(`#canvas-2-${trialNumber}`).addEventListener("touchstart", touchHandler, {passive:false});
+
                 }
               },
             };
@@ -286,6 +344,10 @@ class Experiment {
   }
 
   generatePerformanceSummary(blockNumber) {
+
+    //adding this because inside jatos an error gets thrown: TypeError: can't access property "jsPsych", this is undefined
+    const jsPsych = this.jsPsych;
+
     function calculateScore(score) {
       if (Array.isArray(score)) {
         if (score.length === 0) {
@@ -349,13 +411,17 @@ class Experiment {
     const performanceScreen = {
       type: jsPsychHtmlKeyboardResponse,
       stimulus: `
-        <div class="evaluationBox" style="display:flex; gap:1rem;">
+        <div class="evaluationBox">
             <p id="scoreDescription">You got <span id="percentageScore"></span> right in 
             block ${blockNumber}!</p>
             <p id="evaluation"></p>
+            <h3>Press continue with the next block when you are ready!</h3>
+            <div class="prompt-continue">
+            <button class="ctnBTN">Continue</button>
         </div>
-        <h3>Press SPACE to continue with the next block when you are ready!</h3>`,
-      choices: [" "],
+        
+        </div>`,
+      choices: ["NO_KEYS"],
       on_load: function () {
         let allTrials = jsPsych.data.get().values();
 
@@ -375,6 +441,12 @@ class Experiment {
         percentageScore.textContent = `${percentageCorrect}%`;
         const evaluation = document.querySelector("#evaluation");
         evaluation.textContent = evaluationMessage;
+
+        const ctnBTN = document.querySelector(".ctnBTN");
+
+        ctnBTN.addEventListener("click", () => {
+        jsPsych.finishTrial()
+        })
       },
     };
 
@@ -383,33 +455,33 @@ class Experiment {
 
   async createSortingBlock() {
     const shapeImages = [
-      "../Shapes/Circle.png",
-      "../Shapes/Hexagon.png",
-      "../Shapes/pacman.png",
-      "../Shapes/rect.png",
-      "../Shapes/semicircle.png",
-      "../Shapes/star.png",
-      "../Shapes/Triangle.png",
+      "Shapes/Circle.png",
+      "Shapes/Hexagon.png",
+      "Shapes/pacman.png",
+      "Shapes/rect.png",
+      "Shapes/semicircle.png",
+      "Shapes/star.png",
+      "Shapes/Triangle.png",
     ];
 
     const textureImages = [
-      "../Textures/texture_bottle.png",
-      "../Textures/texture_bricks.png",
-      "../Textures/texture_dots.png",
-      "../Textures/texture_flannel.png",
-      "../Textures/texture_grid.png",
-      "../Textures/texture_verticalLines.png",
-      "../Textures/texture_waves.png",
+      "Textures/texture_bottle.png",
+      "Textures/texture_bricks.png",
+      "Textures/texture_dots.png",
+      "Textures/texture_flannel.png",
+      "Textures/texture_grid.png",
+      "Textures/texture_verticalLines.png",
+      "Textures/texture_waves.png",
     ];
 
     const colourImages = [
-      "../Colours/azure.png",
-      "../Colours/blue.png",
-      "../Colours/green.png",
-      "../Colours/mustardYellow.png",
-      "../Colours/pink.png",
-      "../Colours/red.png",
-      "../Colours/teal.png",
+      "Colours/azure.png",
+      "Colours/blue.png",
+      "Colours/green.png",
+      "Colours/mustardYellow.png",
+      "Colours/pink.png",
+      "Colours/red.png",
+      "Colours/teal.png",
     ];
 
     const sortingMap = {
@@ -426,10 +498,13 @@ class Experiment {
         return {
           type: jsPsychFreeSort,
           stimuli: sortingMap[dimension],
-          prompt: `<p>Please arrange the stimuli according to ${dimension}, in the order you believe they appeared </p>`,
+          prompt: `
+          <div class="free-sort-prompt">
+          <p>Please arrange the stimuli according to ${dimension}, in the order you believe they appeared </p>
+          </div>`,
           sort_area_shape: "ellipse",
-          sort_area_height: 650,
-          sort_area_width: 650,
+          sort_area_height: 600,
+          sort_area_width: 600,
           prompt_location: "above",
           stim_starts_inside: false,
           scale_factor: 1,

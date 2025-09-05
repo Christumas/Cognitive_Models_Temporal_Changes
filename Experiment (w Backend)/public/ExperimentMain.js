@@ -193,18 +193,37 @@ jatos.onLoad(function () {
   runExperiment();
 
   //-------------Code to generate the consent, welcome, instruction and post block screens------//
-  const welcomePrompt = `<p style="font-size:1.5rem;">Welcome to our experiment!</p>`;
-  const welcomeScreen = new Screen(jsPsych, welcomePrompt, [" "]);
+  const welcomePrompt = `<div class="screen-prompt">
+  <p>Welcome to our experiment!</p>
+  <div class="prompt-continue">
+  <button class="ctnBTN">Continue</button>
+  </div>
+  </div>`;
+  const welcomeScreen = new Screen(jsPsych, welcomePrompt, ["NO_KEYS"], onLoadCallBack);
+
+  //adding this event handler to deal with the continue button being pressed.
+
+  function onLoadCallBack() {
+    const ctnBTN = document.querySelector(".ctnBTN");
+
+    ctnBTN.addEventListener("click", () => {
+      jsPsych.finishTrial()
+    })
+  }
+
 
   const instructionsPrompt = `
-<div style="padding:2rem; font-size:1.2rem;">
-<p>In this game you will be presented with abstract objects presented in series.
-Once in a while, you will be shown two abstract objects and you are required to pick the object, which you think
-is the next object.</p>
-<p >You will play a total of 8 blocks of this game! Press SPACE to proceed</p>
-<p>Good luck!</p>
-</div>`;
-  const instructionsScreen = new Screen(jsPsych, instructionsPrompt, [" "]);
+  <div class="screen-prompt">
+    <p>In this game you will be presented with abstract objects presented in series.
+    Once in a while, you will be shown two abstract objects and you are required to pick the object, which you think
+    is the next object.</p>
+    <p >You will play a total of 8 blocks of this game!</p>
+    <p>Good luck!</p>
+    <div class="prompt-continue">
+    <button class="ctnBTN">Continue</button>
+    </div>
+  </div>`;
+  const instructionsScreen = new Screen(jsPsych, instructionsPrompt, ["NO_KEYS"], onLoadCallBack);
 
   let check_consent = function () {
     const items = document.querySelectorAll(".consent-item");
@@ -227,32 +246,52 @@ is the next object.</p>
   };
 
   const postBlockPrompt = `
-    <div>
-    <p>The next block will begin. Press SPACE to proceed.</p>
+    <div class="screen-prompt">
+    <p>The next block will begin. Continue when ready!</p>
+    <div class="prompt-continue">
+    <button class="ctnBTN">Continue</button>
+    </div>
     </div>
 `;
-  const postBlockScreen = new Screen(jsPsych, postBlockPrompt, [" "]);
+  const postBlockScreen = new Screen(jsPsych, postBlockPrompt, ["NO_KEYS"], onLoadCallBack);
 
   const secondBlockPrompt = `
     <div>
     <p>You will now do one final block where you sort the different features of the objects, based off
     the order in which they appeared.</p>
-    <p>Press SPACE to continue.</p>
+    <div class="prompt-continue">
+    <button class="ctnBTN">Continue</button>
+    </div>
     </div>`;
-  const secondBlockScreen = new Screen(jsPsych, secondBlockPrompt, [" "]);
+  const secondBlockScreen = new Screen(jsPsych, secondBlockPrompt, ["NO_KEYS"], onLoadCallBack);
 
   const endScreenPrompt = `
-    <div>
+    <div class="screen-prompt">
     <p>You've have completed the game!</p>
     <p>Thank you for playing! </p>
-    <p>Press SPACE to exit the game!</p>
+    <div class="prompt-continue">
+    <button class="ctnBTN">End Study</button>
+    </div>
     </div>`;
+
   const endScreenCallback = () => {
-          const experimentData =jsPsych.data.get().csv();
-          jatos.appendResultData(experimentData);
-          console.log("Jatos appended data")
-          jatos.endStudy()
-          console.log("Jatos ended study");
-  }
-  const endScreen = new Screen(jsPsych, endScreenPrompt, [" "], null, endScreenCallback);
+    const ctnBTN = document.querySelector(".ctnBTN");
+
+    ctnBTN.addEventListener("click", () => {
+      const experimentData = jsPsych.data.get().csv();
+      jatos.appendResultData(experimentData);
+      console.log("Jatos appended data");
+      jatos.endStudy();
+      console.log("Jatos ended study");
+      })
+    
+  };
+
+  const endScreen = new Screen(
+    jsPsych,
+    endScreenPrompt,
+    [" "],
+    endScreenCallback
+    
+  );
 });

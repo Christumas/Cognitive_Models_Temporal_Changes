@@ -8,7 +8,8 @@ jatos.onLoad(function () {
   const timeline = [];
   const designFileFolder = "./DesignFiles";
   const designFileList = "./DesignFiles/DesignFileList.json";
-  let PROLIFICPID = null;
+  let currentSession = null;
+  let chosenDesignFileName = null;
   let isDayTwo = false;
 
   //STEPS
@@ -30,7 +31,7 @@ jatos.onLoad(function () {
   }
 
   //function to get a deterministic number which we will use as the index 
-  function hashString(str){
+  async function hashString(str){
     let hash = 0;
     for(let i=0; i<str.length; i++){
       hash = (hash <<5) - hash + str.charCodeAt(i);
@@ -44,6 +45,7 @@ jatos.onLoad(function () {
     try {
       let chosenDesignFile
       let [prolificID,sessionID] = await getURLParams();
+      console.log("Prolific ID", prolificID, "SessionID ", typeof sessionID)
       PROLIFICPID = prolificID;
     
       //get list of design files
@@ -52,7 +54,8 @@ jatos.onLoad(function () {
 
       //hash the prolific id so we get a deterministic number which we will use as the index and grab a design file from the designFiles
       //array
-      let designIndex = (hashString(prolificID) % designFiles.length) + 1;
+      let idNumber = await hashString(prolificID);
+      let designIndex = (idNumber % designFiles.length) + 1;
       console.log(designIndex);
 
       //get the first session file using the designfile index and then find the corresponding second session file
@@ -62,12 +65,16 @@ jatos.onLoad(function () {
       let firstSessionFile = firstSessionFiles[designIndex];
       let secondSessionFile = firstSessionFile.replace("session1", "session2");
 
-      if(sessionID ===1){
+      if(Number(sessionID) === 1){
+        chosenDesignFileName = firstSessionFile;
         chosenDesignFile = designFileFolder + "/" + firstSessionFile;
+        currentSession = 1
         console.log(`First session running, returned file ${firstSessionFile}`);
         return chosenDesignFile;
       } else{
+        chosenDesignFile = secondSessionFile;
         chosenDesignFile = designFileFolder + "/" + secondSessionFile;
+        currentSession = 2
         console.log(`Second session running, returned file ${secondSessionFile}`);
         isDayTwo = true;
         return chosenDesignFile;
@@ -130,26 +137,46 @@ jatos.onLoad(function () {
     }
 
     jsPsych.data.addProperties({
-      design_file: designFile,
+      design_file: chosenDesignFileName,
+      session: currentSession
     }); //manually adding the designfile name to our final results
     jsPsych.run(timeline);
   }
 
   runExperiment();
 
-  //-------------Code to generate the consent, welcome, instruction and post block screens------//
-  const welcomePrompt = `<p style="font-size:1.5rem;">Welcome to our experiment!</p>`;
-  const welcomeScreen = new Screen(jsPsych, welcomePrompt, [" "]);
+    //-------------Code to generate the consent, welcome, instruction and post block screens------//
+  const welcomePrompt = `<div class="screen-prompt">
+  <p>Welcome to our experiment!</p>
+  <div class="prompt-continue">
+  <button class="ctnBTN">Continue</button>
+  </div>
+  </div>`;
+  const welcomeScreen = new Screen(jsPsych, welcomePrompt, ["NO_KEYS"], onLoadCallBack);
+
+  //adding this event handler to deal with the continue button being pressed.
+
+  function onLoadCallBack() {
+    const ctnBTN = document.querySelector(".ctnBTN");
+
+    ctnBTN.addEventListener("click", () => {
+      jsPsych.finishTrial()
+    })
+  }
+
 
   const instructionsPrompt = `
-<div style="padding:2rem; font-size:1.2rem;">
-<p>In this game you will be presented with abstract objects presented in series.
-Once in a while, you will be shown two abstract objects and you are required to pick the object, which you think
-is the next object.</p>
-<p >You will play a total of 8 blocks of this game! Press SPACE to proceed</p>
-<p>Good luck!</p>
-</div>`;
-  const instructionsScreen = new Screen(jsPsych, instructionsPrompt, [" "]);
+  <div class="screen-prompt">
+    <p>In this game you will be presented with abstract objects presented in series.
+    Once in a while, you will be shown two abstract objects and you are required to pick the object, which you think
+    is the next object.</p>
+    <p >You will play a total of 8 blocks of this game!</p>
+    <p>Good luck!</p>
+    <div class="prompt-continue">
+    <button class="ctnBTN">Continue</button>
+    </div>
+  </div>`;
+  const instructionsScreen = new Screen(jsPsych, instructionsPrompt, ["NO_KEYS"], onLoadCallBack);
 
   let check_consent = function () {
     const items = document.querySelectorAll(".consent-item");
@@ -172,32 +199,52 @@ is the next object.</p>
   };
 
   const postBlockPrompt = `
-    <div>
-    <p>The next block will begin. Press SPACE to proceed.</p>
+    <div class="screen-prompt">
+    <p>The next block will begin. Continue when ready!</p>
+    <div class="prompt-continue">
+    <button class="ctnBTN">Continue</button>
+    </div>
     </div>
 `;
-  const postBlockScreen = new Screen(jsPsych, postBlockPrompt, [" "]);
+  const postBlockScreen = new Screen(jsPsych, postBlockPrompt, ["NO_KEYS"], onLoadCallBack);
 
   const secondBlockPrompt = `
     <div>
     <p>You will now do one final block where you sort the different features of the objects, based off
     the order in which they appeared.</p>
-    <p>Press SPACE to continue.</p>
+    <div class="prompt-continue">
+    <button class="ctnBTN">Continue</button>
+    </div>
     </div>`;
-  const secondBlockScreen = new Screen(jsPsych, secondBlockPrompt, [" "]);
+  const secondBlockScreen = new Screen(jsPsych, secondBlockPrompt, ["NO_KEYS"], onLoadCallBack);
 
   const endScreenPrompt = `
-    <div>
+    <div class="screen-prompt">
     <p>You've have completed the game!</p>
     <p>Thank you for playing! </p>
-    <p>Press SPACE to exit the game!</p>
+    <div class="prompt-continue">
+    <button class="ctnBTN">End Study</button>
+    </div>
     </div>`;
+
   const endScreenCallback = () => {
-          const experimentData =jsPsych.data.get().csv();
-          jatos.appendResultData(experimentData);
-          console.log("Jatos appended data")
-          jatos.endStudy()
-          console.log("Jatos ended study");
-  }
-  const endScreen = new Screen(jsPsych, endScreenPrompt, [" "], null, endScreenCallback);
+    const ctnBTN = document.querySelector(".ctnBTN");
+
+    ctnBTN.addEventListener("click", () => {
+      const experimentData = jsPsych.data.get().csv();
+      jatos.appendResultData(experimentData);
+      console.log("Jatos appended data");
+      jatos.endStudy();
+      console.log("Jatos ended study");
+      })
+    
+  };
+
+  const endScreen = new Screen(
+    jsPsych,
+    endScreenPrompt,
+    [" "],
+    endScreenCallback
+    
+  );
 });
