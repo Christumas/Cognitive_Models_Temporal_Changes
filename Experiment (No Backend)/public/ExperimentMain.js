@@ -12,6 +12,9 @@ jatos.onLoad(function () {
   let chosenDesignFileName = null;
   let isDayTwo = false;
 
+ 
+
+
   //STEPS
   //1. Create an async function which will get the design file from the design file folder for the participant.
   //2. Create an async function runExperiment() which will handle the experiment flow and have the timeline ready
@@ -26,28 +29,31 @@ jatos.onLoad(function () {
     if (params.has("PROLIFIC_PID") && params.has("SESSION_ID")) {
       return [params.get("PROLIFIC_PID"), params.get("SESSION_ID")];
     } else {
-      return [jatos.urlQueryParameters.PROLIFIC_PID, jatos.urlQueryParameters.SESSION_ID];
+      return [
+        jatos.urlQueryParameters.PROLIFIC_PID,
+        jatos.urlQueryParameters.SESSION_ID,
+      ];
     }
   }
 
-  //function to get a deterministic number which we will use as the index 
-  async function hashString(str){
+  //function to get a deterministic number which we will use as the index
+  async function hashString(str) {
     let hash = 0;
-    for(let i=0; i<str.length; i++){
-      hash = (hash <<5) - hash + str.charCodeAt(i);
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
       hash |= 0;
     }
 
-    return Math.abs(hash)
+    return Math.abs(hash);
   }
 
   async function getDesignFile(designFileList) {
     try {
-      let chosenDesignFile
-      let [prolificID,sessionID] = await getURLParams();
-      console.log("Prolific ID", prolificID, "SessionID ", typeof sessionID)
+      let chosenDesignFile;
+      let [prolificID, sessionID] = await getURLParams();
+      console.log("Prolific ID", prolificID, "SessionID ", typeof sessionID);
       PROLIFICPID = prolificID;
-    
+
       //get list of design files
       let response = await fetch(designFileList);
       let designFiles = await response.json();
@@ -65,29 +71,28 @@ jatos.onLoad(function () {
       let firstSessionFile = firstSessionFiles[designIndex];
       let secondSessionFile = firstSessionFile.replace("session1", "session2");
 
-      if(Number(sessionID) === 1){
+      if (Number(sessionID) === 1) {
         chosenDesignFileName = firstSessionFile;
         chosenDesignFile = designFileFolder + "/" + firstSessionFile;
-        currentSession = 1
+        currentSession = 1;
         console.log(`First session running, returned file ${firstSessionFile}`);
         return chosenDesignFile;
-      } else{
+      } else {
         chosenDesignFile = secondSessionFile;
         chosenDesignFile = designFileFolder + "/" + secondSessionFile;
-        currentSession = 2
-        console.log(`Second session running, returned file ${secondSessionFile}`);
+        currentSession = 2;
+        console.log(
+          `Second session running, returned file ${secondSessionFile}`
+        );
         isDayTwo = true;
         return chosenDesignFile;
       }
-        
     } catch (error) {
       console.error("Couldn't grab file", error.message);
     }
   }
 
-  
-
-  //---Experiment flow---//
+  //---EXPERIMENT FLOW---//
 
   async function runExperiment() {
     //grab design file
@@ -109,9 +114,10 @@ jatos.onLoad(function () {
     console.log(experimentBlockTrials);
 
     //add the welcome screen
-    // timeline.push(welcomeScreen);
-    // timeline.push(ConsentForm);
-    // timeline.push(instructionsScreen);
+    timeline.push(welcomeScreen.getScreen());
+    timeline.push(welcomeScreen.goFullScreen())
+    timeline.push(ConsentForm);
+    timeline.push(instructionsScreen.getScreen());
 
     //add the trials to the timeline
     for (let block in experimentBlockTrials) {
@@ -121,31 +127,31 @@ jatos.onLoad(function () {
         mainExperiment.generatePerformanceSummary(block);
       timeline.push(performanceScreen);
       if (block < 8) {
-        timeline.push(postBlockScreen);
+        timeline.push(postBlockScreen.getScreen());
       }
     }
 
     //sorting block is only added if it is the second session
     if (isDayTwo) {
-      timeline.push(secondBlockScreen);
+      timeline.push(secondBlockScreen.getScreen());
       console.log("sorting trials loaded");
       timeline.push(sortingTrials);
       console.log("end screen added");
-      timeline.push(endScreen);
+      timeline.push(endScreen.getScreen());
     } else {
-      timeline.push(endScreen);
+      timeline.push(endScreen.getScreen());
     }
 
     jsPsych.data.addProperties({
       design_file: chosenDesignFileName,
-      session: currentSession
+      session: currentSession,
     }); //manually adding the designfile name to our final results
     jsPsych.run(timeline);
   }
 
   runExperiment();
 
-    //-------------Code to generate the consent, welcome, instruction and post block screens------//
+  //-------------Code to generate the consent, welcome, instruction and post block screens------//
   const welcomePrompt = `<div class="screen-prompt">
   <p>Welcome to our experiment!</p>
   <div class="prompt-continue">
@@ -153,6 +159,8 @@ jatos.onLoad(function () {
   </div>
   </div>`;
   const welcomeScreen = new Screen(jsPsych, welcomePrompt, ["NO_KEYS"], onLoadCallBack);
+
+
 
   //adding this event handler to deal with the continue button being pressed.
 
@@ -209,7 +217,7 @@ jatos.onLoad(function () {
   const postBlockScreen = new Screen(jsPsych, postBlockPrompt, ["NO_KEYS"], onLoadCallBack);
 
   const secondBlockPrompt = `
-    <div>
+    <div class="screen-prompt">
     <p>You will now do one final block where you sort the different features of the objects, based off
     the order in which they appeared.</p>
     <div class="prompt-continue">

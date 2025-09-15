@@ -7,7 +7,10 @@ class Screen{
         this.choices = choices;
         this.onLoad = onLoadCallback;
         this.onFinish = onFinishCallback;
+           
+    }
 
+    getScreen(){
         const screen = {
             type:this.type,
             choices: this.choices,
@@ -17,6 +20,13 @@ class Screen{
         }
 
         return screen;
+    }
+
+    goFullScreen(){
+        return({
+            type:jsPsychFullscreen,
+            fullscreen_mode:true
+        })
     }
 };
 
