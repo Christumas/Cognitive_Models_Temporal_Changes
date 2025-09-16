@@ -11,6 +11,7 @@ jatos.onLoad(function () {
   let currentSession = null;
   let chosenDesignFileName = null;
   let isDayTwo = false;
+  let PROLIFICPID;
 
  
 
@@ -145,6 +146,7 @@ jatos.onLoad(function () {
     jsPsych.data.addProperties({
       design_file: chosenDesignFileName,
       session: currentSession,
+      ppID : PROLIFICPID
     }); //manually adding the designfile name to our final results
     jsPsych.run(timeline);
   }
