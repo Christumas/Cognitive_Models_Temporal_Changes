@@ -456,11 +456,11 @@ class Experiment {
   async createSortingBlock() {
     const shapeImages = [
       "Shapes/Circle.png",
-      "Shapes/Hexagon.png",
-      "Shapes/pacman.png",
+      "Shapes/hexagon.png",
+      "Shapes/Pacman.png",
       "Shapes/rect.png",
       "Shapes/semicircle.png",
-      "Shapes/star.png",
+      "Shapes/Star.png",
       "Shapes/Triangle.png",
     ];
 

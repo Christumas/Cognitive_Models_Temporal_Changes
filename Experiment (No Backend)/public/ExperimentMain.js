@@ -61,13 +61,13 @@ jatos.onLoad(function () {
       //hash the prolific id so we get a deterministic number which we will use as the index and grab a design file from the designFiles
       //array
       let idNumber = await hashString(prolificID);
-      let designIndex = (idNumber % designFiles.length) + 1;
-      console.log(designIndex);
+      
 
       //get the first session file using the designfile index and then find the corresponding second session file
       let firstSessionFiles = designFiles.filter((file) =>
         file.endsWith("session1.csv")
       );
+      let designIndex = (idNumber % firstSessionFiles.length);
       let firstSessionFile = firstSessionFiles[designIndex];
       let secondSessionFile = firstSessionFile.replace("session1", "session2");
 
