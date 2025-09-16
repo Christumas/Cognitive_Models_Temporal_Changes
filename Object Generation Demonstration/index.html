@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Generation Demonstration</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="jatos.js"></script>
+    <script src="https://unpkg.com/jspsych@8.2.1"></script>
+    <script src="plugins/plugin-instructions.js"></script>
+    <script src="plugins/plugin-free-sort.js"></script>
+    <script src="plugins/plugin-html-keyboard-response.js"></script>
+    <script src="plugins/plugin-external-html.js"></script>
+    <script src="plugins/plugin-survey-text.js"></script>
+    <script src="plugins/plugin-survey-likert.js"></script>
+    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://unpkg.com/jspsych@8.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="Classes/Screen.js"></script>
+    <script src="Classes/Shapes.js"></script>
+    <script src="Classes/Experiment.js"></script>
+</head>
+
+<body>
+    <div class="graph-holder">
+        <div class="graphs" id="graph-holder colour">
+            <svg class="colour-graph" width="300" height="300">
+
+                <!-- outer edges -->
+                <line id="e0" x1="150" y1="37.5" x2="262.5" y2="93.75" stroke="black" stroke-width="5" />
+                <line id="e1" x1="262.5" y1="93.75" x2="262.5" y2="187.5" stroke="black" stroke-width="5" />
+                <line id="e2" x1="262.5" y1="187.5" x2="150" y2="262.5" stroke="black" stroke-width="5" />
+                <line id="e3" x1="150" y1="262.5" x2="37.5" y2="187.5" stroke="black" stroke-width="5" />
+                <line id="e4" x1="37.5" y1="187.5" x2="37.5" y2="93.75" stroke="black" stroke-width="5" />
+                <line id="e5" x1="37.5" y1="93.75" x2="150" y2="37.5" stroke="black" stroke-width="5" />
+
+                <!-- inner edges -->
+                <line id="ie0" x1="150" y1="150" x2="150" y2="37.5" stroke="black" stroke-width="5" />
+                <line id="ie1" x1="150" y1="150" x2="262.5" y2="93.75" stroke="black" stroke-width="5" />
+                <line id="ie2" x1="150" y1="150" x2="262.5" y2="187.75" stroke="black" stroke-width="5" />
+                <line id="ie3" x1="150" y1="150" x2="150" y2="262.5" stroke="black" stroke-width="5" />
+                <line id="ie4" x1="150" y1="150" x2="150" y2="262.5" stroke="black" stroke-width="5" />
+                <line id="ie5" x1="150" y1="150" x2="37.5" y2="187.5" stroke="black" stroke-width="5" />
+                <line id="ie6" x1="150" y1="150" x2="37.5" y2="93.75" stroke="black" stroke-width="5" />
+
+
+                <!-- nodes -->
+                <circle id="Teal" class="graph-node" cx="150" cy="37.5" r="30" fill="teal" />
+                <circle id="Red" class="graph-node" cx="262.5" cy="93.75" r="30" fill="red" />
+                <circle id="Mustard Yellow" class="graph-node" cx="262.5" cy="187.5" r="30" fill="yellow" />
+                <circle id="Pink" class="graph-node" cx="150" cy="262.5" r="30" fill="pink" />
+                <circle id="Green" class="graph-node" cx="37.5" cy="187.5" r="30" fill="lime" />
+                <circle id="Azure" class="graph-node" cx="37.5" cy="93.75" r="30" fill="cyan" />
+                <circle id="Blue" class="graph-node" cx="150" cy="150" r="30" fill="blue" />
+
+            </svg>
+
+        </div>
+
+        <!-- texture graph -->
+
+        <div class="graphs" id="graph-holder texture">
+            <svg class="texture-graph" width="300" height="300">
+
+                <!-- texture patterns -->
+                <defs>
+                    <pattern id="texture_bottle" patternUnits="userSpaceOnUse" width="100%" height="100%">
+                        <image href="Textures/texture_bottle.png" width="100%" height="100%" />
+                    </pattern>
+                    <pattern id="texture_bricks" patternUnits="userSpaceOnUse" width="100%" height="100%">
+                        <image href="Textures/texture_bricks.png" width="100%" height="100%" />
+                    </pattern>
+                    <pattern id="texture_dots" patternUnits="userSpaceOnUse" width="100%" height="100%">
+                        <image href="Textures/texture_dots.png" width="100%" height="100%" />
+                    </pattern>
+                    <pattern id="texture_flannel" patternUnits="userSpaceOnUse" width="100%" height="100%">
+                        <image href="Textures/texture_flannel.png" width="100%" height="100%" />
+                    </pattern>
+                    <pattern id="texture_grid" patternUnits="userSpaceOnUse" width="100%" height="100%">
+                        <image href="Textures/texture_grid.png" width="100%" height="100%" />
+                    </pattern>
+                    <pattern id="texture_verticalLines" patternUnits="userSpaceOnUse" width="100%" height="100%">
+                        <image href="Textures/texture_verticalLines.png" width="100%" height="100%" />
+                    </pattern>
+                    <pattern id="texture_waves" patternUnits="userSpaceOnUse" width="100%" height="100%">
+                        <image href="Textures/texture_waves.png" width="100%" height="100%" />
+                    </pattern>
+                </defs>
+
+
+
+                <!-- outer edges -->
+                <line id="e0" x1="150" y1="37.5" x2="262.5" y2="93.75" stroke="black" stroke-width="5" />
+                <line id="e1" x1="262.5" y1="93.75" x2="262.5" y2="187.5" stroke="black" stroke-width="5" />
+                <line id="e2" x1="262.5" y1="187.5" x2="150" y2="262.5" stroke="black" stroke-width="5" />
+                <line id="e3" x1="150" y1="262.5" x2="37.5" y2="187.5" stroke="black" stroke-width="5" />
+                <line id="e4" x1="37.5" y1="187.5" x2="37.5" y2="93.75" stroke="black" stroke-width="5" />
+                <line id="e5" x1="37.5" y1="93.75" x2="150" y2="37.5" stroke="black" stroke-width="5" />
+
+                <!-- inner edges -->
+                <line id="ie0" x1="150" y1="150" x2="150" y2="37.5" stroke="black" stroke-width="5" />
+                <line id="ie1" x1="150" y1="150" x2="262.5" y2="93.75" stroke="black" stroke-width="5" />
+                <line id="ie2" x1="150" y1="150" x2="262.5" y2="187.75" stroke="black" stroke-width="5" />
+                <line id="ie3" x1="150" y1="150" x2="150" y2="262.5" stroke="black" stroke-width="5" />
+                <line id="ie4" x1="150" y1="150" x2="150" y2="262.5" stroke="black" stroke-width="5" />
+                <line id="ie5" x1="150" y1="150" x2="37.5" y2="187.5" stroke="black" stroke-width="5" />
+                <line id="ie6" x1="150" y1="150" x2="37.5" y2="93.75" stroke="black" stroke-width="5" />
+
+
+                <!-- nodes -->
+                <circle id="Bricks" class="graph-node" cx="150" cy="37.5" r="30" fill="url(#texture_bricks)" />
+                <circle id="Dots" class="graph-node" cx="262.5" cy="93.75" r="30" fill="url(#texture_dots)" />
+                <circle id="Grid" class="graph-node" cx="262.5" cy="187.5" r="30" fill="url(#texture_grid)" />
+                <circle id="Waves" class="graph-node" cx="150" cy="262.5" r="30" fill="url(#texture_waves)" />
+                <circle id="Bottle" class="graph-node" cx="37.5" cy="187.5" r="30" fill="url(#texture_bottle)" />
+                <circle id="Flannel" class="graph-node" cx="37.5" cy="93.75" r="30" fill="url(#texture_flannel)" />
+                <circle id="VerticalLines" class="graph-node" cx="150" cy="150" r="30"
+                    fill="url(#texture_verticalLines)" />
+
+            </svg>
+
+        </div>
+
+
+        <!-- shape graph -->
+        <div class="graphs" id="graph-holder shape">
+            <svg class="shape-graph" width="300" height="300">
+
+                <!-- outer edges -->
+                <line id="e0" x1="150" y1="37.5" x2="262.5" y2="93.75" stroke="black" stroke-width="5" />
+                <line id="e1" x1="262.5" y1="93.75" x2="262.5" y2="187.5" stroke="black" stroke-width="5" />
+                <line id="e2" x1="262.5" y1="187.5" x2="150" y2="262.5" stroke="black" stroke-width="5" />
+                <line id="e3" x1="150" y1="262.5" x2="37.5" y2="187.5" stroke="black" stroke-width="5" />
+                <line id="e4" x1="37.5" y1="187.5" x2="37.5" y2="93.75" stroke="black" stroke-width="5" />
+                <line id="e5" x1="37.5" y1="93.75" x2="150" y2="37.5" stroke="black" stroke-width="5" />
+
+                <!-- inner edges -->
+                <line id="ie0" x1="150" y1="150" x2="150" y2="37.5" stroke="black" stroke-width="5" />
+                <line id="ie1" x1="150" y1="150" x2="262.5" y2="93.75" stroke="black" stroke-width="5" />
+                <line id="ie2" x1="150" y1="150" x2="262.5" y2="187.75" stroke="black" stroke-width="5" />
+                <line id="ie3" x1="150" y1="150" x2="150" y2="262.5" stroke="black" stroke-width="5" />
+                <line id="ie4" x1="150" y1="150" x2="150" y2="262.5" stroke="black" stroke-width="5" />
+                <line id="ie5" x1="150" y1="150" x2="37.5" y2="187.5" stroke="black" stroke-width="5" />
+                <line id="ie6" x1="150" y1="150" x2="37.5" y2="93.75" stroke="black" stroke-width="5" />
+
+
+                <!-- nodes -->
+                <!-- <image id="Rect" class="graph-node" id="c0" x="120" y="7.5" width="60" height="60" href="Shapes/rect.png" />
+                    <image id="Semicircle"class="graph-node" id="c1" x="232.5" y="63.75" width="60" height="60" href="Shapes/semicircle.png" />
+                    <image id= "Circle "class="graph-node" id="c2" x="232.5" y="157.5" width="60" height="60" href="Shapes/Circle.png" />
+                    <image id ="Hexagon"class="graph-node" id="c3" x="120" y="232.5" width="60" height="60" href="Shapes/hexagon.png" />
+                    <image id="Star"class="graph-node" id="c4" x="7.5" y="157.5" width="60" height="60" href="Shapes/Star.png" />
+                    <image id="Pacman"class="graph-node" id="c5" x="7.5" y="63.75" width="60" height="60" href="Shapes/Pacman.png" />
+                    <image id="Triangle"class="graph-node" id="c6" x="120" y="120" width="60" height="60" href="Shapes/Triangle.png" />
+                    e" /> -->
+
+                <circle id="Rect" class="node-border" cx="150" cy="37.5" r="30" fill="none" stroke-width="0" />
+                <image id="Rect" x="120" y="7.5" width="60" height="60" href="Shapes/rect.png" />
+
+                <circle id="Semicircle" class="node-border" cx="262.5" cy="93.75" r="30" fill="none" stroke-width="0" />
+                <image id="Semicircle" x="232.5" y="63.75" width="60" height="60" href="Shapes/semicircle.png" />
+
+                <circle id="Circle" class="node-border" cx="262.5" cy="187.5" r="30" fill="none" stroke-width="0" />
+                <image id="Circle" x="232.5" y="157.5" width="60" height="60" href="Shapes/Circle.png" />
+
+                <circle id="Hexagon" class="node-border" cx="150" cy="262.5" r="30" fill="none" stroke-width="0" />
+                <image id="Hexagon" x="120" y="232.5" width="60" height="60" href="Shapes/hexagon.png" />
+
+                <circle id="Star" class="node-border" cx="37.5" cy="187.5" r="30" fill="none" stroke-width="0" />
+                <image id="Star" x="7.5" y="157.5" width="60" height="60" href="Shapes/Star.png" />
+
+                <circle id="Pacman" class="node-border" cx="37.5" cy="93.75" r="30" fill="none" stroke-width="0" />
+                <image id="Pacman" x="7.5" y="63.75" width="60" height="60" href="Shapes/Pacman.png" />
+
+                <circle id="Triangle" class="node-border" cx="150" cy="150" r="30" fill="none" stroke-width="0" />
+                <image id="Triangle" x="120" y="120" width="60" height="60" href="Shapes/Triangle.png" />
+
+
+            </svg>
+
+
+        </div>
+
+
+
+    </div>
+    <div class="currentNodeStim">
+        <div id="colorStim"></div>
+        <div id="textureStim"></div>
+        <div id="shapeStim"></div>
+    </div>
+
+    <div class="currentNodeDist">
+        <div id="colorDist"></div>
+        <div id="textureDist"></div>
+        <div id="shapeDist"></div>
+    </div>
+
+
+
+
+
+    <script src="index.js"></script>
+
+
+</body>
+
+</html>

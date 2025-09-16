@@ -1,25 +1,55 @@
 const colourVals = {
+  Teal: "rgb(3, 135, 104, 0.5)",
   Red: "rgb(189, 38, 38,0.5)",
   "Mustard Yellow": "rgb(252, 181, 25,0.5)",
-  Teal: "rgb(3, 135, 104, 0.5)",
-  Green: "rgb(17, 199, 0,0.5)",
   Pink: "rgb(255, 3, 154, 0.5)",
+  Green: "rgb(17, 199, 0,0.5)",
   Azure: "rgb(3, 221, 255, 0.5)",
   Blue: "rgb(66, 3, 255, 0.5)",
 };
 
-
 const textures = [
-  "Textures/texture_bottle.png",
   "Textures/texture_bricks.png",
   "Textures/texture_dots.png",
-  "Textures/texture_flannel.png",
   "Textures/texture_grid.png",
-  "Textures/texture_verticalLines.png",
   "Textures/texture_waves.png",
+  "Textures/texture_bottle.png",
+  "Textures/texture_flannel.png",
+  "Textures/texture_verticalLines.png"
 ];
 
 const colours = Object.keys(colourVals);
+
+//for the graph visualization
+const colNodes = [
+  "Teal",
+  "Red",
+  "Mustard Yellow",
+  "Pink",
+  "Green",
+  "Azure",
+  "Blue"
+];
+
+const textNodes = [
+ "Bricks",
+ "Dots",
+ "Grid",
+ "Waves",
+ "Bottle",
+ "Flannel",
+ "VerticalLines"
+];
+
+const shapeNodes = [
+  "Rect",
+  "Semicircle",
+  "Circle",
+  "Hexagon",
+  "Star",
+  "Pacman",
+  "Triangle",
+];
 
 class Experiment {
   constructor(jsPsychInstance, designFilePath) {
@@ -28,12 +58,12 @@ class Experiment {
     this.colours = colourVals;
     this.textures = textures;
     this.shapes = [
+      Rectangle,
+      Semicircle,
       Circle,
       Hexagon,
-      Pacman,
-      Semicircle,
-      Rectangle,
       Star,
+      Pacman,
       Triangle,
     ];
     this.blockAndTrials = {};
@@ -69,49 +99,50 @@ class Experiment {
     const customScales = [1, 1, 1, 1, 1.5, 1, 1.5];
     const jsPsych = this.jsPsych;
 
+    function clearHighlights() {
+      document
+        .querySelectorAll(".node-highlight-stim, .node-highlight-distractor")
+        .forEach((el) =>
+          el.classList.remove(
+            "node-highlight-stim",
+            "node-highlight-distractor"
+          )
+        );
+    }
+
+    function highlightNode(name, role = "stim") {
+      const el = document.getElementById(name);
+      if (!el) return;
+      el.classList.add(
+        role === "stim" ? "node-highlight-stim" : "node-highlight-distractor"
+      );
+    }
+
+    function updateCurrentNodesStim(colour, texture, shape) {
+      document.getElementById("colorStim").textContent = `Colour Stim: ${colour}`;
+      document.getElementById("textureStim").textContent = `Texture Stim: ${texture}`;
+      document.getElementById("shapeStim").textContent = `Shape Stim: ${shape}`;
+    }
+
+    function updateCurrentNodesDist(colour, texture, shape) {
+      document.getElementById("colorDist").textContent = `Colour Dist: ${colour}`;
+      document.getElementById("textureDist").textContent = `Texture Dist: ${texture}`;
+      document.getElementById("shapeDist").textContent = `Shape Dist: ${shape}`;
+    }
+
     for (let block of uniqueBlocks) {
       table.forEach((row) => {
         //all the regular stimulus trials
-        let trialData = {
-          Block: row["Block Number"],
-          Stay_Prob_Colour: row["Stay_Probability(Colour)"],
-          Stay_Prob_Texture: row["Stay_Probability(Texture)"],
-          Stay_Prob_Shape: row["Stay_Probability(Shape)"],
-          Choice_Trial_Index: row["Choice Trial Index"],
-          Colour_stim: row["Colour_stim"],
-          Texture_stim: row["Texture_stim"],
-          Shape_stim: row["Shape_stim"],
-          Slow_stim: row["Slow_stim"],
-          Medium_stim: row["Medium_stim"],
-          Fast_stim: row["Fast_stim"],
-          Colour_distractor: row["Colour_distractor"],
-          Texture_distractor: row["Texture_distractor"],
-          Shape_distractor: row["Shape_distractor"],
-          Slow_distractor: row["Slow_distractor"],
-          Medium_distractor: row["Medium_distractor"],
-          Fast_distractor: row["Fast_distractor"],
-          Distractor_consistent_colour: row["Distractor_consistent_colour"],
-          Distractor_consistent_texture: row["Distractor_consistent_texture"],
-          Distractor_consistent_shape: row["Distractor_consistent_shape"],
-          Distractor_shares_colour: row["Distractor_shares_colour"],
-          Distractor_shares_texture: row["Distractor_shares_texture"],
-          Distractor_shares_shape: row["Distractor_shares_shape"],
-          Distractor_shares_slow: row["Distractor_shares_slow"],
-          Distractor_shares_medium: row["Distractor_shares_medium"],
-          Distractor_shares_fast: row["Distractor_shares_fast"],
-          Stim_Canvas: "",
-          Distractor_Canvas: "",
-          Keypress: "",
-          Touch_Target:"", //this is for when participants use a phone or tablet to do the task
-          Response_Correct: "",
-          RT: "",
-        };
 
         if (row["Block Number"] === block) {
           if (!row["Choice Trial Index"]) {
             const colourNode = colourVals[colours[row["Colour_stim"]]];
             const textureNode = textures[row["Texture_stim"]];
             const shapeNode = row["Shape_stim"];
+
+            const graphColour = colNodes[row["Colour_stim"]];
+            const graphTexture = textNodes[row["Texture_stim"]];
+            const graphShape = shapeNodes[row["Shape_stim"]];
 
             const trial = {
               type: jsPsychHtmlKeyboardResponse,
@@ -120,6 +151,12 @@ class Experiment {
                         </div>`,
               on_load: function () {
                 //drawing logic
+                clearHighlights();
+                highlightNode(graphColour,"stim");
+                highlightNode(graphTexture,"stim");
+                highlightNode(graphShape,"stim")
+                updateCurrentNodesStim(row["Colour_stim"], row["Texture_stim"] , row["Shape_stim"])
+
                 const shapeInstance = new shapes[shapeNode](
                   colourNode,
                   textureNode,
@@ -127,8 +164,7 @@ class Experiment {
                 );
                 shapeInstance.draw();
               },
-              choices: "NO_KEYS",
-              trial_duration: 1000,
+              choices: [" "],
               post_trial_gap: 300,
               data: {
                 Block: block,
@@ -158,6 +194,17 @@ class Experiment {
               colourVals[colours[row["Colour_distractor"]]]; //change to distractor
             const textureNodeDistractor = textures[row["Texture_distractor"]]; //change to distractor
             const shapeNodeDistractor = row["Shape_distractor"]; //change to distractor
+
+            const graphColour = colNodes[row["Colour_stim"]];
+            const graphTexture = textNodes[row["Texture_stim"]];
+            const graphShape = shapeNodes[row["Shape_stim"]];
+
+            const graphColourDist = colNodes[row["Colour_distractor"]]
+            const graphTextureDist = textNodes[row["Texture_distractor"]]
+            const graphShapeDist = shapeNodes[row["Shape_distractor"]]
+
+
+
             const canvasIDs = [
               `canvas-1-${trialNumber}`,
               `canvas-2-${trialNumber}`,
@@ -186,8 +233,25 @@ class Experiment {
               response_ends_trial: false,
               post_trial_gap: 300,
               on_load: function () {
-                //manually add RT data because using response_ends_trial prevents rt from being recorded by the plugin
-                const trialStart = performance.now();
+
+
+                clearHighlights();
+                //highlight stim nodes on the graph
+                clearHighlights();
+                highlightNode(graphColour,"stim");
+                highlightNode(graphTexture,"stim");
+                highlightNode(graphShape,"stim")
+                updateCurrentNodesStim(row["Colour_stim"], row["Texture_stim"] , row["Shape_stim"]);
+
+                highlightNode(graphColourDist,"distractor");
+                highlightNode(graphTextureDist,"distractor");
+                highlightNode(graphShapeDist,"distractor")
+                 updateCurrentNodesDist(row["Colour_distractor"], row["Texture_distractor"] , row["Shape_distractor"]);
+
+
+                
+
+
 
                 //shuffle the canvas ids on every choice trial so the stimulus and generated objects
                 //are drawn on different canvases
@@ -206,7 +270,6 @@ class Experiment {
                   customScales[shapeNodeStim]
                 );
                 shapeInstanceStim.draw(canvasIDs[0]);
-                trialData["Stim_Canvas"] = canvasIDs[0];
 
                 const shapeInstanceDistractor = new shapes[shapeNodeDistractor](
                   colourNodeDistractor,
@@ -214,19 +277,6 @@ class Experiment {
                   customScales[shapeNodeDistractor]
                 );
                 shapeInstanceDistractor.draw(canvasIDs[1]);
-                trialData["Distractor_Canvas"] = canvasIDs[1];
-
-                //add the stimulus and distractor canvas onto the trial data
-                //split the trial number from the canvas ID to just get either canvas-1 or canvas-2 to get the corresponding sides
-                trialData["Stim_Canvas"] =
-                  canvasToSideMap[
-                    canvasIDs[0].split("-").slice(0, 2).join("-")
-                  ];
-                trialData["Distractor_Canvas"] =
-                  canvasToSideMap[
-                    canvasIDs[1].split("-").slice(0, 2).join("-")
-                  ];
-
                 let correctOption = canvasIDs[0];
                 let incorrectOption = canvasIDs[1];
 
@@ -236,7 +286,7 @@ class Experiment {
                   document.querySelector(`#${correctOption}`) &&
                   document.querySelector(`#${incorrectOption}`)
                 ) {
-                  //handle keypresses 
+                  //handle keypresses
                   function keyHandler(event) {
                     const keyPress = event.key;
 
@@ -244,12 +294,7 @@ class Experiment {
                       return;
                     }
 
-                    trialData["Keypress"] = keyPress;
-                    const keyPressTime = performance.now();
-                    const reactionTimeForTrial = Math.round(
-                      keyPressTime - trialStart
-                    );
-                    trialData["RT"] = reactionTimeForTrial;
+
                     const correctCanvas = correctOption;
                     let chosenCanvasID = null;
 
@@ -261,79 +306,85 @@ class Experiment {
 
                     if (chosenCanvasID == correctCanvas) {
                       let response = true;
-                      trialData["Response_Correct"] = 1;
                       const feedback = new Feedback();
                       feedback.draw(chosenCanvasID, response);
 
                       document.removeEventListener("keydown", keyHandler);
                       setTimeout(() => {
-                        jsPsych.finishTrial(trialData);
+                        jsPsych.finishTrial();
                       }, 1000);
                     } else {
                       let response = false;
-                      trialData["Response_Correct"] = 0;
                       const feedback = new Feedback();
                       feedback.draw(chosenCanvasID, response);
                       document.removeEventListener("keydown", keyHandler);
                       setTimeout(() => {
-                        jsPsych.finishTrial(trialData);
+                        jsPsych.finishTrial();
                       }, 1000);
                     }
                   }
                   //handle touch screen behaviour for mobile
-                  function touchHandler(event){
+                  function touchHandler(event) {
                     event.preventDefault();
                     const touchTarget = event.target.id;
                     const keyPressTime = performance.now();
                     const reactionTimeForTrial = Math.round(
                       keyPressTime - trialStart
                     );
-                    trialData["RT"] = reactionTimeForTrial;
                     const correctCanvas = correctOption;
                     let chosenCanvasID = null;
-                    if(touchTarget === `canvas-1-${trialNumber}`){
-                      chosenCanvasID = `canvas-1-${trialNumber}` ;
-                      trialData["Touch_Target"] = "Left"
-                    } else if (touchTarget === `canvas-2-${trialNumber}`){
-                      trialData["Touch_Target"] = "Right"
+                    if (touchTarget === `canvas-1-${trialNumber}`) {
+                      chosenCanvasID = `canvas-1-${trialNumber}`;
+                    } else if (touchTarget === `canvas-2-${trialNumber}`) {
                       chosenCanvasID = `canvas-2-${trialNumber}`;
                     }
 
                     if (chosenCanvasID == correctCanvas) {
                       let response = true;
-                      trialData["Response_Correct"] = 1;
                       const feedback = new Feedback();
                       feedback.draw(chosenCanvasID, response);
-                      
+
                       document.removeEventListener("keydown", keyHandler);
-                      document.querySelector(`#canvas-1-${trialNumber}`).removeEventListener("touchStart", touchHandler);
-                      document.querySelector(`#canvas-2-${trialNumber}`).removeEventListener("touchStart", touchHandler);
+                      document
+                        .querySelector(`#canvas-1-${trialNumber}`)
+                        .removeEventListener("touchStart", touchHandler);
+                      document
+                        .querySelector(`#canvas-2-${trialNumber}`)
+                        .removeEventListener("touchStart", touchHandler);
 
                       setTimeout(() => {
-                        jsPsych.finishTrial(trialData);
+                        jsPsych.finishTrial();
                       }, 1000);
                     } else {
                       let response = false;
-                      trialData["Response_Correct"] = 0;
                       const feedback = new Feedback();
                       feedback.draw(chosenCanvasID, response);
 
                       document.removeEventListener("keydown", keyHandler);
-                      document.querySelector(`#canvas-1-${trialNumber}`).removeEventListener("touchStart", touchHandler);
-                      document.querySelector(`#canvas-2-${trialNumber}`).removeEventListener("touchStart", touchHandler);
+                      document
+                        .querySelector(`#canvas-1-${trialNumber}`)
+                        .removeEventListener("touchStart", touchHandler);
+                      document
+                        .querySelector(`#canvas-2-${trialNumber}`)
+                        .removeEventListener("touchStart", touchHandler);
                       setTimeout(() => {
-                        jsPsych.finishTrial(trialData);
+                        jsPsych.finishTrial();
                       }, 1000);
                     }
-
-
                   }
 
                   //add the event listeners for desktop and mobile
                   document.addEventListener("keydown", keyHandler);
-                  document.querySelector(`#canvas-1-${trialNumber}`).addEventListener("touchstart", touchHandler, {passive:false});
-                  document.querySelector(`#canvas-2-${trialNumber}`).addEventListener("touchstart", touchHandler, {passive:false});
-
+                  document
+                    .querySelector(`#canvas-1-${trialNumber}`)
+                    .addEventListener("touchstart", touchHandler, {
+                      passive: false,
+                    });
+                  document
+                    .querySelector(`#canvas-2-${trialNumber}`)
+                    .addEventListener("touchstart", touchHandler, {
+                      passive: false,
+                    });
                 }
               },
             };
@@ -342,116 +393,6 @@ class Experiment {
         }
       });
     }
-  }
-
-  generatePerformanceSummary(blockNumber) {
-
-    //adding this because inside jatos an error gets thrown: TypeError: can't access property "jsPsych", this is undefined
-    const jsPsych = this.jsPsych;
-
-    function calculateScore(score) {
-      if (Array.isArray(score)) {
-        if (score.length === 0) {
-          return 0;
-        }
-
-        //provide the score as a percentage
-        let initialValue = 0;
-        const sum = score.reduce((partialSum, currentValue) => {
-          return partialSum + currentValue;
-        }, initialValue);
-
-        let percentageScore = (sum / score.length) * 100;
-
-        return percentageScore.toFixed(2);
-      } else {
-        //if score is an object from jspsych.data.get()
-        let initialValue = 0;
-        let scoreArray = score.values;
-        const sum = scoreArray.values.reduce((partialSum, currentValue) => {
-          return partialSum + currentValue;
-        }, initialValue);
-
-        let percentageScore = (sum / scoreArray.length) * 100;
-        return percentageScore.toFixed(1);
-      }
-    }
-
-    function evaluateScore(percentageScore) {
-      let evaluation;
-
-      switch (true) {
-        case percentageScore < 50:
-          evaluation = "You could do better!";
-          break;
-
-        case percentageScore < 70:
-          evaluation = "Good job, keep going!";
-          break;
-
-        case percentageScore < 80:
-          evaluation = "Very nicely done!";
-          break;
-
-        case percentageScore < 90:
-          evaluation = "Excellent, you are on fire!!";
-          break;
-
-        case percentageScore <= 100:
-          evaluation = "A Perfect score! Be proud of yourself!";
-          break;
-
-        default:
-          evaluation = "Try harder! You got this!";
-      }
-
-      return evaluation;
-    }
-
-    //return the performance screen
-    const performanceScreen = {
-      type: jsPsychHtmlKeyboardResponse,
-      stimulus: `
-        <div class="evaluationBox">
-            <p id="scoreDescription">You got <span id="percentageScore"></span> right in 
-            block ${blockNumber}!</p>
-            <p id="evaluation"></p>
-            <h3>Press continue with the next block when you are ready!</h3>
-            <div class="prompt-continue">
-            <button class="ctnBTN">Continue</button>
-        </div>
-        
-        </div>`,
-      choices: ["NO_KEYS"],
-      on_load: function () {
-        let allTrials = jsPsych.data.get().values();
-
-        const scoreArray = allTrials
-          .filter(
-            (trial) =>
-              trial.Block == blockNumber && trial.Response_Correct !== undefined
-          )
-          .map((trial) => trial.Response_Correct);
-
-        console.log("scoreArray", scoreArray);
-
-        let percentageCorrect = calculateScore(scoreArray);
-        let evaluationMessage = evaluateScore(percentageCorrect);
-
-        const percentageScore = document.querySelector("#percentageScore");
-        percentageScore.textContent = `${percentageCorrect}%`;
-        const evaluation = document.querySelector("#evaluation");
-        evaluation.textContent = evaluationMessage;
-
-        const ctnBTN = document.querySelector(".ctnBTN");
-
-        ctnBTN.addEventListener("click", () => {
-        jsPsych.finishTrial()
-        })
-      },
-    };
-
-    return performanceScreen;
   }
 
   async createSortingBlock() {

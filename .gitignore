@@ -1,7 +1,6 @@
 *.svg
 .png
 .jpg
-/Object Generation Demonstration
 plugins
 Shapes
 Textures
