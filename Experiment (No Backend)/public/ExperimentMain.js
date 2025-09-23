@@ -54,6 +54,7 @@ jatos.onLoad(function () {
       let [prolificID, sessionID] = await getURLParams();
       console.log("Prolific ID", prolificID, "SessionID ", typeof sessionID);
       PROLIFICPID = prolificID;
+      console.log("i am new")
 
       //get list of design files
       let response = await fetch(designFileList);
@@ -63,12 +64,14 @@ jatos.onLoad(function () {
       //array
       let idNumber = await hashString(prolificID);
       
-
+      console.log(designFiles.length)
+      
       //get the first session file using the designfile index and then find the corresponding second session file
       let firstSessionFiles = designFiles.filter((file) =>
         file.endsWith("session1.csv")
       );
       let designIndex = (idNumber % firstSessionFiles.length);
+      console.log(designIndex);
       let firstSessionFile = firstSessionFiles[designIndex];
       let secondSessionFile = firstSessionFile.replace("session1", "session2");
 
@@ -79,6 +82,7 @@ jatos.onLoad(function () {
         console.log(`First session running, returned file ${firstSessionFile}`);
         return chosenDesignFile;
       } else {
+        chosenDesignFileName = secondSessionFile;
         chosenDesignFile = secondSessionFile;
         chosenDesignFile = designFileFolder + "/" + secondSessionFile;
         currentSession = 2;
@@ -103,6 +107,9 @@ jatos.onLoad(function () {
     const mainExperiment = new Experiment(jsPsych, designFile);
     //load the design file into the object so you can generate trials
     await mainExperiment.loadDesignFile(designFile);
+    //preload all the assets for the browser
+    await mainExperiment.preloadAssets();
+    
     //generate the trials for each block
     await mainExperiment.generateTrials();
     //store the trials in a variable
@@ -116,37 +123,57 @@ jatos.onLoad(function () {
 
     //add the welcome screen
     timeline.push(welcomeScreen.getScreen());
+    if(isDayTwo) {
+      timeline.push(sessionTwoScreen.getScreen())
+    }else {
+      timeline.push(sessionOneScreen.getScreen())
+    };
     timeline.push(welcomeScreen.goFullScreen())
+    document.addEventListener("fullscreenchange", () => {
+      if(!document.fullscreenElement){
+        alert("Please stay in fullscreen mode to continue the experiment.");
+        jsPsych.runTimeline([{
+          type:jsPsychFullscreen,
+          fullscreen_mode:true
+        }])
+      }
+    })
     timeline.push(ConsentForm);
     timeline.push(instructionsScreen.getScreen());
 
     //add the trials to the timeline
-    for (let block in experimentBlockTrials) {
-      const trials = experimentBlockTrials[block];
-      timeline.push(...trials);
-      const performanceScreen =
-        mainExperiment.generatePerformanceSummary(block);
-      timeline.push(performanceScreen);
-      if (block < 8) {
-        timeline.push(postBlockScreen.getScreen());
-      }
-    }
+    // for (let block in experimentBlockTrials) {
+    //   const trials = experimentBlockTrials[block];
+    //   timeline.push(...trials);
+    //   const performanceScreen =
+    //     mainExperiment.generatePerformanceSummary(block);
+    //   timeline.push(performanceScreen);
+    //   if (block < 8) {
+    //     timeline.push(postBlockScreen.getScreen());
+
+    //   }
+    // }
 
     //sorting block is only added if it is the second session
     if (isDayTwo) {
       timeline.push(secondBlockScreen.getScreen());
       console.log("sorting trials loaded");
-      timeline.push(sortingTrials);
+      // timeline.push(sortingTrials);
       console.log("end screen added");
+      timeline.push(preQuestionnaireScreen.getScreen());
+      timeline.push(mainExperiment.generateFeedbackForm(questionsSessionTwo));
       timeline.push(endScreen.getScreen());
     } else {
+      timeline.push(preQuestionnaireScreen.getScreen());
+      timeline.push(mainExperiment.generateFeedbackForm(questionsSessionOne));
+
       timeline.push(endScreen.getScreen());
     }
 
     jsPsych.data.addProperties({
       design_file: chosenDesignFileName,
       session: currentSession,
-      ppID : PROLIFICPID
+      ppID :PROLIFICPID
     }); //manually adding the designfile name to our final results
     jsPsych.run(timeline);
   }
@@ -162,7 +189,25 @@ jatos.onLoad(function () {
   </div>`;
   const welcomeScreen = new Screen(jsPsych, welcomePrompt, ["NO_KEYS"], onLoadCallBack);
 
+  //session information screen
+  const sessionOnePrompt = `
+  <div class="screen-prompt">
+  <p>You will be doing two sessions of this game. Today you will do the first session.</p>
+  <div class="prompt-continue">
+  <button class="ctnBTN">Continue</button>
+  </div>
+  </div>`
 
+  const sessionTwoPrompt = `
+  <div class="screen-prompt">
+  <p>Welcome back! Delighted to have you here! Today you will do the second session.</p>
+  <div class="prompt-continue">
+  <button class="ctnBTN">Continue</button>
+  </div>
+  </div>`
+
+  const sessionOneScreen = new Screen(jsPsych,sessionOnePrompt, ["NO_KEYS"], onLoadCallBack);
+  const sessionTwoScreen = new Screen(jsPsych,sessionTwoPrompt, ["NO_KEYS"], onLoadCallBack);
 
   //adding this event handler to deal with the continue button being pressed.
 
@@ -177,9 +222,9 @@ jatos.onLoad(function () {
 
   const instructionsPrompt = `
   <div class="screen-prompt">
-    <p>In this game you will be presented with abstract objects presented in series.
-    Once in a while, you will be shown two abstract objects and you are required to pick the object, which you think
-    is the next object.</p>
+    <p>In this game you will be presented with objects presented in series.
+    Once in a while, you will be shown two objects and your goal is to pick the object which can come next by using the
+    LEFT ARROW KEY or RIGHT ARROW KEY.</p>
     <p >You will play a total of 8 blocks of this game!</p>
     <p>Good luck!</p>
     <div class="prompt-continue">
@@ -227,6 +272,23 @@ jatos.onLoad(function () {
     </div>
     </div>`;
   const secondBlockScreen = new Screen(jsPsych, secondBlockPrompt, ["NO_KEYS"], onLoadCallBack);
+
+  const preQuestionnairePrompt = `<div class="screen-prompt">
+    <p>Thank you for playing! Before finishing up this session, please answer a few questions.</p>
+    <div class="prompt-continue">
+    <button class="ctnBTN">Continue</button>
+    </div>
+    </div>`
+  const preQuestionnaireScreen = new Screen(jsPsych, preQuestionnairePrompt, ["NO_KEYS"], onLoadCallBack);
+
+  const questionsSessionOne = ["How would you rate the difficulty of the first session from 1 to 10? Could you tell us about your experience?",
+    "Do you have any further comments about your experience with the first session the task? (E.g. Issues you had, while playing with the task)"
+  ]
+  const questionsSessionTwo = ["How would you rate the difficulty of the second session from 1 to 10? Could you tell us about your experience?",
+"Do you have any further comments about your experience with the seccond session of the task? (E.g. Issues you had, while playing with the task)"
+  ]
+  
+
 
   const endScreenPrompt = `
     <div class="screen-prompt">

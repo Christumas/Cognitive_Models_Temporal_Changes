@@ -96,7 +96,7 @@ class Experiment {
     const table = this.designFileData;
     const uniqueBlocks = [...new Set(table.map((row) => row["Block Number"]))];
     const shapes = this.shapes;
-    const customScales = [1, 1, 1, 1, 1.5, 1, 1.5];
+    const customScales = [1.5, 1, 1, 1, 1, 1, 1.5];
     const jsPsych = this.jsPsych;
 
     function clearHighlights() {
@@ -129,6 +129,12 @@ class Experiment {
       document.getElementById("textureDist").textContent = `Texture Dist: ${texture}`;
       document.getElementById("shapeDist").textContent = `Shape Dist: ${shape}`;
     }
+    
+    function clearCurrentNodesDist(){
+      document.getElementById("colorDist").textContent = ``;
+      document.getElementById("textureDist").textContent = ``;
+      document.getElementById("shapeDist").textContent = ``;
+    }
 
     for (let block of uniqueBlocks) {
       table.forEach((row) => {
@@ -152,6 +158,7 @@ class Experiment {
               on_load: function () {
                 //drawing logic
                 clearHighlights();
+                clearCurrentNodesDist();
                 highlightNode(graphColour,"stim");
                 highlightNode(graphTexture,"stim");
                 highlightNode(graphShape,"stim")

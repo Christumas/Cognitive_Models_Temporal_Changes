@@ -1,21 +1,21 @@
 const colourVals = {
+  Teal: "rgb(3, 135, 104, 0.5)",
   Red: "rgb(189, 38, 38,0.5)",
   "Mustard Yellow": "rgb(252, 181, 25,0.5)",
-  Teal: "rgb(3, 135, 104, 0.5)",
-  Green: "rgb(17, 199, 0,0.5)",
   Pink: "rgb(255, 3, 154, 0.5)",
+  Green: "rgb(17, 199, 0,0.5)",
   Azure: "rgb(3, 221, 255, 0.5)",
   Blue: "rgb(66, 3, 255, 0.5)",
 };
 
 const textures = [
-  "Textures/texture_bottle.png",
   "Textures/texture_bricks.png",
   "Textures/texture_dots.png",
-  "Textures/texture_flannel.png",
   "Textures/texture_grid.png",
-  "Textures/texture_verticalLines.png",
   "Textures/texture_waves.png",
+  "Textures/texture_bottle.png",
+  "Textures/texture_flannel.png",
+  "Textures/texture_verticalLines.png"
 ];
 
 const colours = Object.keys(colourVals);
@@ -27,12 +27,12 @@ class Experiment {
     this.colours = colourVals;
     this.textures = textures;
     this.shapes = [
+      Rectangle,
+      Semicircle,
       Circle,
       Hexagon,
-      Pacman,
-      Semicircle,
-      Rectangle,
       Star,
+      Pacman,
       Triangle,
     ];
     this.blockAndTrials = {};
@@ -65,7 +65,7 @@ class Experiment {
     const table = this.designFileData;
     const uniqueBlocks = [...new Set(table.map((row) => row["Block Number"]))];
     const shapes = this.shapes;
-    const customScales = [1, 1, 1, 1, 1.5, 1, 1.5];
+    const customScales = [1.5, 1, 1, 1, 1, 1, 1.5];
     const jsPsych = this.jsPsych;
 
     for (let block of uniqueBlocks) {
