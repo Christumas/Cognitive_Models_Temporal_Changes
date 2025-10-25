@@ -25,7 +25,10 @@ class Screen{
     goFullScreen(){
         return({
             type:jsPsychFullscreen,
-            fullscreen_mode:true
+            fullscreen_mode:true,
+            message: `<p style="padding:0.5rem;">The experiment will switch to full screen mode when you press the button below. 
+            Do not exit fullscreen for the entire duration of the experiment. Exiting fullscreen would render your final submission invalid
+            and you may not get paid.</p>`
         })
     }
 };

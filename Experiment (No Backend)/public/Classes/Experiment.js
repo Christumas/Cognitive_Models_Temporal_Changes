@@ -1,22 +1,20 @@
 const colourVals = {
-  Teal: "rgb(3, 135, 104, 0.5)",
-  Red: "rgb(189, 38, 38,0.5)",
-  "Mustard Yellow": "rgb(252, 181, 25,0.5)",
-  Pink: "rgb(255, 3, 154, 0.5)",
-  Green: "rgb(17, 199, 0,0.5)",
-  Azure: "rgb(3, 221, 255, 0.5)",
-  Blue: "rgb(66, 3, 255, 0.5)",
+  Blue: "rgb(0, 0, 255, 0.6)",
+  Red: "rgb(240, 45, 9,0.6)",
+  Yellow: "rgb(255, 255, 0,0.6)",
+  Pink: "rgb(235, 112, 245, 0.6)",
+  Green: "rgb(26, 245, 0,0.6)",
+  Grey: "rgb(128, 128, 128, 0.6)",
 };
 
-const textures = [
-  "Textures/texture_bricks.png",
-  "Textures/texture_dots.png",
-  "Textures/texture_grid.png",
-  "Textures/texture_waves.png",
-  "Textures/texture_bottle.png",
-  "Textures/texture_flannel.png",
-  "Textures/texture_verticalLines.png",
-];
+const textureMap = {
+  Bricks: "Textures/texture_bricks.png",
+  Dots: "Textures/texture_dots.png",
+  Grid: "Textures/texture_grid.png",
+  Waves: "Textures/texture_waves.png",
+  Bottles: "Textures/texture_bottle.png",
+  VerticalLines: "Textures/texture_verticalLines.png",
+};
 
 const colours = Object.keys(colourVals);
 
@@ -25,16 +23,8 @@ class Experiment {
     this.jsPsych = jsPsychInstance;
     this.designFilePath = designFilePath;
     this.colours = colourVals;
-    this.textures = textures;
-    this.shapes = [
-      Rectangle,
-      Semicircle,
-      Circle,
-      Hexagon,
-      Star,
-      Pacman,
-      Triangle,
-    ];
+    this.textures = textureMap;
+    this.shapes = [Rectangle, Semicircle, Circle, Hexagon, Star, Triangle];
     this.blockAndTrials = {};
     this.designFileData = [];
     this.blockScore = {};
@@ -44,31 +34,28 @@ class Experiment {
   //preload all the images
   async preloadAssets() {
     try {
-      console.log("added assets")
+      console.log("added assets");
       return {
         type: jsPsychPreload,
         images: [
+          "Textures/texture_bottle.png",
           "Textures/texture_bricks.png",
           "Textures/texture_dots.png",
           "Textures/texture_grid.png",
-          "Textures/texture_waves.png",
-          "Textures/texture_bottle.png",
-          "Textures/texture_flannel.png",
           "Textures/texture_verticalLines.png",
-          "Colours/azure.png",
-          "Colours/blue.png",
-          "Colours/green.png",
-          "Colours/mustardYellow.png",
-          "Colours/pink.png",
-          "Colours/red.png",
-          "Colours/teal.png",
+          "Textures/texture_waves.png",
           "Shapes/Circle.png",
           "Shapes/hexagon.png",
-          "Shapes/Pacman.png",
           "Shapes/rect.png",
           "Shapes/semicircle.png",
           "Shapes/Star.png",
           "Shapes/Triangle.png",
+          "Colours/blue.png",
+          "Colours/green.png",
+          "Colours/grey.png",
+          "Colours/pink.png",
+          "Colours/red.png",
+          "Colours/yellow.png",
         ],
       };
     } catch (error) {
@@ -99,40 +86,67 @@ class Experiment {
   async generateTrials() {
     const table = this.designFileData;
     const uniqueBlocks = [...new Set(table.map((row) => row["Block Number"]))];
-    const shapes = this.shapes;
-    const customScales = [1.5, 1, 1, 1, 1, 1, 1.5];
+    const customScales = {
+      Rectangle: 1.5,
+      Semicircle: 1,
+      Circle: 1,
+      Hexagon: 1,
+      Star: 1,
+      Triangle: 1.5,
+    };
+    const shapeClasses = {
+      Rectangle,
+      Semicircle,
+      Circle,
+      Hexagon,
+      Star,
+      Triangle,
+    };
     const jsPsych = this.jsPsych;
 
     for (let block of uniqueBlocks) {
       table.forEach((row) => {
         //all the regular stimulus trials
         let trialData = {
-          Block: row["Block Number"],
-          Stay_Prob_Colour: row["Stay_Probability(Colour)"],
-          Stay_Prob_Texture: row["Stay_Probability(Texture)"],
-          Stay_Prob_Shape: row["Stay_Probability(Shape)"],
-          Choice_Trial_Index: row["Choice Trial Index"],
-          Colour_stim: row["Colour_stim"],
-          Texture_stim: row["Texture_stim"],
-          Shape_stim: row["Shape_stim"],
-          Slow_stim: row["Slow_stim"],
-          Medium_stim: row["Medium_stim"],
-          Fast_stim: row["Fast_stim"],
-          Colour_distractor: row["Colour_distractor"],
-          Texture_distractor: row["Texture_distractor"],
-          Shape_distractor: row["Shape_distractor"],
-          Slow_distractor: row["Slow_distractor"],
-          Medium_distractor: row["Medium_distractor"],
-          Fast_distractor: row["Fast_distractor"],
-          Distractor_consistent_colour: row["Distractor_consistent_colour"],
-          Distractor_consistent_texture: row["Distractor_consistent_texture"],
-          Distractor_consistent_shape: row["Distractor_consistent_shape"],
-          Distractor_shares_colour: row["Distractor_shares_colour"],
-          Distractor_shares_texture: row["Distractor_shares_texture"],
-          Distractor_shares_shape: row["Distractor_shares_shape"],
-          Distractor_shares_slow: row["Distractor_shares_slow"],
-          Distractor_shares_medium: row["Distractor_shares_medium"],
-          Distractor_shares_fast: row["Distractor_shares_fast"],
+          // Block: row["Block Number"],
+          // Stay_Prob_Colour: row["Stay_Probability(Colour)"],
+          // Stay_Prob_Texture: row["Stay_Probability(Texture)"],
+          // Stay_Prob_Shape: row["Stay_Probability(Shape)"],
+          // Colour_stim: row["Colour_stim"],
+          // Texture_stim: row["Texture_stim"],
+          // Shape_stim: row["Shape_stim"],
+          // Slow_stim: row["Slow_stim"],
+          // Medium_stim: row["Medium_stim"],
+          // Fast_stim: row["Fast_stim"],
+          // Choice_Trial_Index: row["Choice Trial Index"],
+          // Colour_distractor: row["Colour_distractor"],
+          // Texture_distractor: row["Texture_distractor"],
+          // Shape_distractor: row["Shape_distractor"],
+          // Slow_distractor: row["Slow_distractor"],
+          // Medium_distractor: row["Medium_distractor"],
+          // Fast_distractor: row["Fast_distractor"],
+          // Target_shares_colour: row["Target_shares_colour"],
+          // Target_shares_texture: row["Target_shares_texture"],
+          // Target_shares_shape: row["Target_shares_shape"],
+          // Target_shares_slow: row["Target_shares_slow"],
+          // Target_shares_medium: row["Target_shares_medium"],
+          // Target_shares_fast: row["Target_shares_fast"],
+          // Distractor_consistent_colour: row["Distractor_consistent_colour"],
+          // Distractor_consistent_texture: row["Distractor_consistent_texture"],
+          // Distractor_consistent_shape: row["Distractor_consistent_shape"],
+          // Distractor_shares_colour_target: row["Distractor_shares_colour_target"],
+          // Distractor_shares_texture_target: row["Distractor_shares_texture_target"],
+          // Distractor_shares_shape_target: row["Distractor_shares_shape_target"],
+          // Distractor_shares_slow_target: row["Distractor_shares_slow_target"],
+          // Distractor_shares_medium_target: row["Distractor_shares_medium_target"],
+          // Distractor_shares_fast_target: row["Distractor_shares_fast_target"],
+          // Distractor_shares_colour_object: row["Distractor_shares_colour_object"],
+          // Distractor_shares_texture_object: row["Distractor_shares_texture_object"],
+          // Distractor_shares_shape_object: row["Distractor_shares_shape_object"],
+          // Distractor_shares_slow_object: row["Distractor_shares_slow_object"],
+          // Distractor_shares_medium_object: row["Distractor_shares_medium_object"],
+          // Distractor_shares_fast_object: row["Distractor_shares_fast_object"],
+          ...row,
           Stim_Canvas: "",
           Distractor_Canvas: "",
           Keypress: "",
@@ -141,11 +155,19 @@ class Experiment {
           RT: "",
         };
 
+        const colourGraph = JSON.parse(row["Colour_Graph"].replace(/'/g, '"'));
+        const textureGraph = JSON.parse(
+          row["Texture_Graph"].replace(/'/g, '"')
+        );
+        const shapeGraph = JSON.parse(row["Shape_Graph"].replace(/'/g, '"'));
+
         if (row["Block Number"] === block) {
           if (!row["Choice Trial Index"]) {
-            const colourNode = colourVals[colours[row["Colour_stim"]]];
-            const textureNode = textures[row["Texture_stim"]];
-            const shapeNode = row["Shape_stim"];
+            const colourName = colourGraph[row["Colour_stim"]];
+            const colourNode = colourVals[colourName];
+
+            const textureNode = textureMap[textureGraph[row["Texture_stim"]]];
+            const shapeNode = shapeGraph[row["Shape_stim"]];
 
             // console.log(row["Colour_stim"],row["Texture_stim"], row["Shape_stim"])
             const trial = {
@@ -155,7 +177,7 @@ class Experiment {
                         </div>`,
               on_load: function () {
                 //drawing logic
-                const shapeInstance = new shapes[shapeNode](
+                const shapeInstance = new shapeClasses[shapeNode](
                   colourNode,
                   textureNode,
                   customScales[shapeNode]
@@ -185,14 +207,17 @@ class Experiment {
             this.blockAndTrials[block].push(trial);
           } else if (row["Choice Trial Index"]) {
             const trialNumber = row["Trial Number"];
-            const colourNodeStim = colourVals[colours[row["Colour_stim"]]];
-            const textureNodeStim = textures[row["Texture_stim"]];
-            const shapeNodeStim = row["Shape_stim"];
+
+            const colourNodeStim = colourVals[colourGraph[row["Colour_stim"]]];
+            const textureNodeStim =
+              textureMap[textureGraph[row["Texture_stim"]]];
+            const shapeNodeStim = shapeGraph[row["Shape_stim"]];
 
             const colourNodeDistractor =
-              colourVals[colours[row["Colour_distractor"]]]; //change to distractor
-            const textureNodeDistractor = textures[row["Texture_distractor"]]; //change to distractor
-            const shapeNodeDistractor = row["Shape_distractor"]; //change to distractor
+              colourVals[colourGraph[row["Colour_distractor"]]]; //change to distractor
+            const textureNodeDistractor =
+              textureMap[textureGraph[row["Texture_distractor"]]]; //change to distractor
+            const shapeNodeDistractor = shapeGraph[row["Shape_distractor"]]; //change to distractor
             const canvasIDs = [
               `canvas-1-${trialNumber}`,
               `canvas-2-${trialNumber}`,
@@ -235,7 +260,7 @@ class Experiment {
                 //stimulus shapes, therefore the correct answer should be the canvas at index [0] in the array
 
                 //drawing logic
-                const shapeInstanceStim = new shapes[shapeNodeStim](
+                const shapeInstanceStim = new shapeClasses[shapeNodeStim](
                   colourNodeStim,
                   textureNodeStim,
                   customScales[shapeNodeStim]
@@ -243,7 +268,9 @@ class Experiment {
                 shapeInstanceStim.draw(canvasIDs[0]);
                 trialData["Stim_Canvas"] = canvasIDs[0];
 
-                const shapeInstanceDistractor = new shapes[shapeNodeDistractor](
+                const shapeInstanceDistractor = new shapeClasses[
+                  shapeNodeDistractor
+                ](
                   colourNodeDistractor,
                   textureNodeDistractor,
                   customScales[shapeNodeDistractor]
@@ -505,7 +532,6 @@ class Experiment {
     const shapeImages = [
       "Shapes/Circle.png",
       "Shapes/hexagon.png",
-      "Shapes/Pacman.png",
       "Shapes/rect.png",
       "Shapes/semicircle.png",
       "Shapes/Star.png",
@@ -516,20 +542,18 @@ class Experiment {
       "Textures/texture_bottle.png",
       "Textures/texture_bricks.png",
       "Textures/texture_dots.png",
-      "Textures/texture_flannel.png",
       "Textures/texture_grid.png",
       "Textures/texture_verticalLines.png",
       "Textures/texture_waves.png",
     ];
 
     const colourImages = [
-      "Colours/azure.png",
       "Colours/blue.png",
       "Colours/green.png",
-      "Colours/mustardYellow.png",
+      "Colours/grey.png",
       "Colours/pink.png",
       "Colours/red.png",
-      "Colours/teal.png",
+      "Colours/yellow.png",
     ];
 
     const sortingMap = {
@@ -563,21 +587,16 @@ class Experiment {
   }
 
   generateFeedbackForm(questions) {
-    let rows = 10
+    let rows = 10;
     let columns = 100;
     let textArea = {
       type: jsPsychSurveyText,
       questions: questions.map((question) => {
-        return (
-          {prompt:question,
-            rows: rows,
-            columns: columns
-          }
-        )
+        return { prompt: question, rows: rows, columns: columns };
       }),
       rows: 10,
-      columns:20
-    }
+      columns: 20,
+    };
     return textArea;
   }
 }
