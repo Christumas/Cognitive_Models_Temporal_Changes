@@ -1,0 +1,7 @@
+,pink,grey,red,green,blue,yellow
+pink,0,1,2,3,2,1
+grey,1,0,1,2,3,2
+red,2,1,0,1,2,3
+green,3,2,1,0,1,2
+blue,2,3,2,1,0,1
+yellow,1,2,3,2,1,0

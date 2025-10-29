@@ -1,0 +1,7 @@
+,verticallines,dots,bottles,waves,bricks,grid
+verticallines,0,1,2,3,2,1
+dots,1,0,1,2,3,2
+bottles,2,1,0,1,2,3
+waves,3,2,1,0,1,2
+bricks,2,3,2,1,0,1
+grid,1,2,3,2,1,0
