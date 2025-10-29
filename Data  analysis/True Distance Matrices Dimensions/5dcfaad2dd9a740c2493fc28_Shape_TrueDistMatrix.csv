@@ -1,7 +1,0 @@
-,hexagon,triangle,star,rectangle,semicircle,circle
-hexagon,0,1,2,3,2,1
-triangle,1,0,1,2,3,2
-star,2,1,0,1,2,3
-rectangle,3,2,1,0,1,2
-semicircle,2,3,2,1,0,1
-circle,1,2,3,2,1,0
